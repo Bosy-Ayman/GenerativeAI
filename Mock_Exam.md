@@ -117,18 +117,19 @@ Calculate the KL-Divergences $D_{KL}(P \| Q)$ and $D_{KL}(Q \| P)$ for the follo
 ---
 
 ## 💻 Section III: Coding Questions [12 Marks]
-*(Write your Python code iteratively. Standard imports like numpy as np are allowed).*
+*(Write your Python code iteratively. Standard imports like torch and nn are allowed).*
 
-### Q1: Latent Space Walk with Variable Steps [5 Marks]
-Assume you have a readymade AutoEncoder:
-```python
-Zs = encoder.predict(x_test)
-decoded_imgs = decoder.predict(Zs)
-```
-Write a Python function `latent_walk_search(Zs, Targt, threshold)` that walks the latent space between each pair of latent vectors in `Zs`.
-* For each pair of vectors $(Z_i, Z_k)$, try variable step sizes from **12 to 18 steps** (inclusive) using `np.linspace`.
-* Decode the interpolated points and calculate the distance using a readymade function `Dist(Img1, Img2)`.
-* If a decoded image has a distance $\leq \text{threshold}$, save it to a list and return the list when the search is complete.
+### Q1: PyTorch CGAN Conditional Label Embedding & Forward Step [5 Marks]
+In a Conditional GAN (CGAN) project using PyTorch:
+* The Generator receives random noise vector `z` (shape: `batch_size, latent_dim, 1, 1`) and class labels `labels` (shape: `batch_size`).
+* In the class constructor `__init__`, we defined:
+  `self.label_emb = nn.Embedding(num_classes, embedding_dim)`
+  `self.model = nn.Sequential(...)`
+Write the `forward(self, z, labels)` function for this PyTorch CGAN Generator showing how to:
+1. Pass labels through the embedding layer.
+2. Shape/unsqueeze the labels to 4D to match `z`.
+3. Concatenate the embedded labels with `z` along the channel dimension.
+4. Pass the concatenated tensor through `self.model` and return the generated images.
 
 ---
 
@@ -164,7 +165,7 @@ Here are the detailed model answers for the mock final exam. Each answer contain
 * **بالعربي**: طبقة الـ `UpSampling2D` مفيهاش أي معاملات بتتدرب (صفر معاملات). هي بس بتكرر البكسلات عشان تكبر الصورة من غير تعلم.
 
 ### 4. **c. Conv2DTranspose**
-* **English Explanation**: `Conv2DTranspose` (often called deconvolution) performs upscaling using learnable filters/parameters, allowing the model to learn how to upscale images cleanly.
+* **English Explanation**: `Conv2DTranspose` performs upscaling using learnable filters/parameters, allowing the model to learn how to upscale images cleanly.
 * **بالعربي**: الـ `Conv2DTranspose` هي الطبقة اللي بتكبر حجم الصورة بذكاء عن طريق فلاتر بتتعلم (ليها أوزان بتتدرب).
 
 ### 5. **c. $D_{KL}(P \| Q) \neq D_{KL}(Q \| P)$ in general**
@@ -200,13 +201,13 @@ $$x_t = \sqrt{\alpha_{t-1}} x_{t-1} + \sqrt{1 - \alpha_{t-1}} \epsilon_{t-1}$$
 #### **a) Calculate $x_1$ ($t=1$):**
 $$x_1 = \sqrt{\alpha_0} x_0 + \sqrt{1 - \alpha_0} \epsilon_0$$
 * Calculate coefficients:
-  * $\sqrt{\alpha_0} = \sqrt{0.9} \approx 0.94868$
-  * $\sqrt{1 - \alpha_0} = \sqrt{0.1} \approx 0.31623$
+  * $\sqrt{\alpha_0} = \sqrt{0.9} \approx 0.9487$
+  * $\sqrt{1 - \alpha_0} = \sqrt{0.1} \approx 0.3162$
 * Compute:
-  $$\sqrt{\alpha_0} x_0 = 0.94868 \times [0.8, -0.4, 0.1, -0.2] = [0.7589, -0.3795, 0.0949, -0.1897]$$
-  $$\sqrt{1 - \alpha_0} \epsilon_0 = 0.31623 \times [0.1, 0.2, -0.1, 0.3] = [0.0316, 0.0632, -0.0316, 0.0949]$$
+  $$\sqrt{\alpha_0} x_0 = 0.9487 \times [0.8, -0.4, 0.1, -0.2] = [0.75896, -0.37948, 0.09487, -0.18974]$$
+  $$\sqrt{1 - \alpha_0} \epsilon_0 = 0.3162 \times [0.1, 0.2, -0.1, 0.3] = [0.03162, 0.06324, -0.03162, 0.09486]$$
 * Sum element-wise:
-  $$x_1 = [0.7589 + 0.0316, -0.3795 + 0.0632, 0.0949 - 0.0316, -0.1897 + 0.0949]$$
+  $$x_1 = [0.75896 + 0.03162, -0.37948 + 0.06324, 0.09487 - 0.03162, -0.18974 + 0.09486]$$
   $$\mathbf{x_1 \approx [0.7906, -0.3162, 0.0632, -0.0949]}$$
 
 ---
@@ -214,13 +215,13 @@ $$x_1 = \sqrt{\alpha_0} x_0 + \sqrt{1 - \alpha_0} \epsilon_0$$
 #### **b) Calculate $x_2$ ($t=2$):**
 $$x_2 = \sqrt{\alpha_1} x_1 + \sqrt{1 - \alpha_1} \epsilon_1$$
 * Calculate coefficients:
-  * $\sqrt{\alpha_1} = \sqrt{0.8} \approx 0.89443$
-  * $\sqrt{1 - \alpha_1} = \sqrt{0.2} \approx 0.44721$
+  * $\sqrt{\alpha_1} = \sqrt{0.8} \approx 0.8944$
+  * $\sqrt{1 - \alpha_1} = \sqrt{0.2} \approx 0.4472$
 * Compute:
-  $$\sqrt{\alpha_1} x_1 = 0.89443 \times [0.7906, -0.3162, 0.0632, -0.0949] \approx [0.7071, -0.2828, 0.0565, -0.0849]$$
-  $$\sqrt{1 - \alpha_1} \epsilon_1 = 0.44721 \times [-0.2, 0.1, 0.4, -0.1] = [-0.0894, 0.0447, 0.1789, -0.0447]$$
+  $$\sqrt{\alpha_1} x_1 = 0.8944 \times [0.7906, -0.3162, 0.0632, -0.0949] \approx [0.70710, -0.28285, 0.05652, -0.08488]$$
+  $$\sqrt{1 - \alpha_1} \epsilon_1 = 0.4472 \times [-0.2, 0.1, 0.4, -0.1] = [-0.08944, 0.04472, 0.17888, -0.04472]$$
 * Sum element-wise:
-  $$x_2 = [0.7071 - 0.0894, -0.2828 + 0.0447, 0.0565 + 0.1789, -0.0849 - 0.0447]$$
+  $$x_2 = [0.70710 - 0.08944, -0.28285 + 0.04472, 0.05652 + 0.17888, -0.08488 - 0.04472]$$
   $$\mathbf{x_2 \approx [0.6177, -0.2381, 0.2355, -0.1296]}$$
 
 ---
@@ -291,35 +292,32 @@ $$D_{KL}(Q \| P) = -0.0863 + 0.1217 - 0.0811 + 0.1386 = \mathbf{0.0929}$$
 
 ## 📂 Section III: Coding Answers
 
-### Q1: Latent Space Walk with Variable Steps
+### Q1: PyTorch CGAN Conditional Label Embedding & Forward Step
 ```python
-import numpy as np
+import torch
+import torch.nn as nn
 
-def latent_walk_search(Zs, Targt, threshold):
-    those = []
-    num_samples = len(Zs)
+def forward(self, z, labels):
+    # 1. Pass label integer indices through the embedding layer
+    # Input labels shape: (batch_size)
+    # Output label_embedding shape: (batch_size, embedding_dim)
+    label_embedding = self.label_emb(labels)
     
-    # 1. Iterate over all unique pairs of latent vectors
-    for i in range(num_samples):
-        for k in range(i + 1, num_samples):
-            
-            # 2. Variable step sizes from 12 to 18 (inclusive)
-            for steps in range(12, 19):
-                # Interpolate between Z_i and Z_k
-                interpolated = np.linspace(Zs[i], Zs[k], steps)
-                
-                # 3. Decode all interpolated steps at once
-                decoded_imgs = decoder.predict(interpolated)
-                
-                # 4. Check distance to target
-                for a in range(steps):
-                    img = decoded_imgs[a]
-                    if Dist(img, Targt) <= threshold:
-                        those.append(img)
-                        break  # Found match for this pair, move to next pair
-                        
-    return those
+    # 2. Shape/unsqueeze embedded labels to 4D to match 4D z (batch, latent, 1, 1)
+    # Unsqueezing twice adds the two spatial dimensions (H and W) of size 1
+    label_embedding = label_embedding.unsqueeze(2).unsqueeze(3)  # shape: (batch_size, embedding_dim, 1, 1)
+    
+    # 3. Concatenate embedded labels with z along the channel dimension (dim=1)
+    # z shape: (batch_size, latent_dim, 1, 1)
+    # Resulting x shape: (batch_size, latent_dim + embedding_dim, 1, 1)
+    x = torch.cat([z, label_embedding], dim=1)
+    
+    # 4. Pass the concatenated tensor through self.model and return
+    # self.model is nn.Sequential(nn.ConvTranspose2d(...))
+    return self.model(x)
 ```
+* **English Explanation**: In a Conditional GAN Generator, the label is a conditional signal. We cannot just add it; we must embed it to a continuous vector, align its dimensions to match the 4D noise tensor `z`, concatenate it along the channels, and feed the combined representation to the network.
+* **بالعربي**: في الـ CGAN Generator، بنحول الـ class label لـ vector صغير عن طريق الـ Embedding. بعدين بنكبرها لـ 4D باستخدام `unsqueeze(2).unsqueeze(3)` عشان تكون بنفس أبعاد التشويش `z`. بعد كدا بنلزقهم مع بعض في الـ channel dimension (dim=1) وندخلهم للشبكة.
 
 ---
 
