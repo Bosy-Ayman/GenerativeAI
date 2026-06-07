@@ -1,6 +1,6 @@
 # 📖 Repo Sheet Analysis & Core Relations
 
-This document analyzes the questions in [Sheet.pdf](Slides/Sheet.pdf), breaks down the **mathematical relations** that always exist, and explains how to solve any variation the professor might introduce in tomorrow's final exam.
+This document analyzes the questions in [Sheet.pdf](../Slides/Sheet.pdf), breaks down the **mathematical relations** that always exist, and explains how to solve any variation the professor might introduce in tomorrow's final exam.
 
 ---
 
