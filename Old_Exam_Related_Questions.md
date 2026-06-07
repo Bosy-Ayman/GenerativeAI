@@ -259,7 +259,7 @@ decoded_imgs = decoder.predict(Zs)
 ```
 Your manager targets generating a letter like $\varphi$ which is not in MNIST. Using latent space walk, write a code to interpolate between each pair of $Zs$ (using 10 steps) until you generate a sample that is most similar to the target ($D(Img_1, Img_2) \leq \text{threshold}$). Assume you have a readymade function `D = Dist(Img1, Img2)`.
 
-![Latent Walk Illustration from 2023 Final](file:///c:/Users/pouss/Documents/CSAI/4th%20Year/Spring/GenerativeAI/exams_images/final23_latent_walk_1.png)
+![Latent Walk Illustration from 2023 Final](exams_images/final23_latent_walk_1.png)
 
 **2023 Model Answer (with typos corrected in brackets):**
 ```python
@@ -288,7 +288,7 @@ for i in range(len(Results)):
 **2024 Question (7 Marks):**
 Same setup, but the interpolation step count should be variable (trying different interpolation values between 10 and 20).
 
-![Latent Walk to Target Letter Phi from 2024 Final](file:///c:/Users/pouss/Documents/CSAI/4th%20Year/Spring/GenerativeAI/exams_images/final24_latent_walk_phi.jpg)
+![Latent Walk to Target Letter Phi from 2024 Final](exams_images/final24_latent_walk_phi.jpg)
 
 **Correct Python Solution:**
 ```python
@@ -322,8 +322,8 @@ a) Create a copy of the top half of the `Trgt` image. [3 Marks]
 b) Modify all negative values of the $\mu$ such that $new\mu = \mu \times -0.8$. [4 Marks]
 c) Assume we have a readymade $D = Dist(Img1, Img2)$. Using your modified $\mu$, find an image ($i = ?$) and noise ($noise = ?$) that gives a decoded image `DCode` such that its top half is very similar to the cropped target. [5 Marks]
 
-![MNIST Target 4](file:///c:/Users/pouss/Documents/CSAI/4th%20Year/Spring/GenerativeAI/exams_images/final23_mnist_target_4.jpg)
-![MNIST Target Cropped Top Half](file:///c:/Users/pouss/Documents/CSAI/4th%20Year/Spring/GenerativeAI/exams_images/final23_mnist_target_cropped.png)
+![MNIST Target 4](exams_images/final23_mnist_target_4.jpg)
+![MNIST Target Cropped Top Half](exams_images/final23_mnist_target_cropped.png)
 
 **Correct Python Solution:**
 ```python
@@ -382,8 +382,8 @@ a) Flip the `Trgt` image. [2 Marks]
 b) Modify all positive values of the $\mu$ for all of the training dataset to be negative. [4 Marks]
 c) Using your modified $\mu$, find an image ($i = ?$) from the training data, and a noise ($noise = ?$) that gives a decoded image `DCode` very similar to the flipped target. [6 Marks]
 
-![MNIST Original and Flipped Target 4](file:///c:/Users/pouss/Documents/CSAI/4th%20Year/Spring/GenerativeAI/exams_images/final24_vae_target_flipped.jpg)
-![Mean Vector Matrix modification diagram](file:///c:/Users/pouss/Documents/CSAI/4th%20Year/Spring/GenerativeAI/exams_images/final24_vae_mu_modified.png)
+![MNIST Original and Flipped Target 4](exams_images/final24_vae_target_flipped.jpg)
+![Mean Vector Matrix modification diagram](exams_images/final24_vae_mu_modified.png)
 
 **Correct Python Solution:**
 ```python
