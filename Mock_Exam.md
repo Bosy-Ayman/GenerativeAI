@@ -3,7 +3,7 @@
 **Course:** Generative Adversarial Networks (AI442)  
 **Exam Duration:** 2 Hours  
 **Total Marks:** 40 Marks  
-**Coverage:** Word2Vec, Autoencoders, Huffman Coding, VAEs, GANs/CGANs, and Diffusion Models (PCA NOT included).
+**Coverage:** Word2Vec, Autoencoders, VAEs, GANs/CGANs, and Diffusion Models (PCA and Huffman Coding NOT included).
 
 ---
 
@@ -45,12 +45,12 @@ Which of the following statements is true regarding Kullback-Leibler (KL) Diverg
 * c. $D_{KL}(P \| Q) \neq D_{KL}(Q \| P)$ in general
 * d. $D_{KL}(P \| Q) = 1 / D_{KL}(Q \| P)$
 
-### 6. Huffman Codes Prefix Property
-If the set of generated codes for a message is `(01, 10, 00, 110, 111)`, which of the following is true?
-* a. It is not prefix-free because 0 is a prefix of 01.
-* b. It is prefix-free (valid prefix code).
-* c. It is not prefix-free because 110 contains 10.
-* d. It cannot represent a latent space.
+### 6. VAE Encoder Outputs
+Why does the VAE encoder output log-variance $\log(\sigma^2)$ instead of variance $\sigma^2$ directly?
+* a. Because log-variance speeds up reconstruction training.
+* b. Because variance must always be positive (> 0) which is hard to guarantee directly, whereas log-variance can be any real number ($-\infty$ to $+\infty$).
+* c. Because the KL divergence loss only accepts log-variance.
+* d. Because it eliminates the need for the reparameterization trick.
 
 ### 7. GAN Detaching Gradients
 When training the Discriminator in a GAN, we compute `D(fake_imgs.detach())`. Why do we call `.detach()`?
@@ -71,11 +71,19 @@ What are the inputs to the U-Net noise-predictor model at each step of the denoi
 ## 📊 Section II: Tracing Questions [20 Marks]
 *Provide detailed step-by-step calculations and diagrams.*
 
-### Q1: Huffman Coding [5 Marks]
-If you have a message to be encoded by the Huffman Algorithm:
-The message contains: **45 letters of "x", 45 letters of "y", 10 letters of "z", 20 letters of "w", and 30 letters of "t"**.
-* Build the Encoding Tree.
-* Generate the Codes for each letter.
+### Q1: Forward Diffusion Step Tracing [5 Marks]
+Assume we have:
+* A 1D original image vector at $t=0$: $$x_0 = [0.8, -0.4, 0.1, -0.2]$$
+* A noise schedule with $\alpha_0 = 0.9$ and $\alpha_1 = 0.8$.
+* Two independent random noise vectors:
+  $$\epsilon_0 = [0.1, 0.2, -0.1, 0.3]$$
+  $$\epsilon_1 = [-0.2, 0.1, 0.4, -0.1]$$
+
+Using the forward diffusion formula:
+$$x_t = \sqrt{\alpha_{t-1}} x_{t-1} + \sqrt{1 - \alpha_{t-1}} \epsilon_{t-1}$$
+* **a)** Calculate the noisy image vector $x_1$ at timestep $t=1$. *[2.5 Marks]*
+* **b)** Calculate the noisy image vector $x_2$ at timestep $t=2$. *[2.5 Marks]*
+*(Round all final vector elements to 4 decimal places).*
 
 ---
 
@@ -163,13 +171,9 @@ Here are the detailed model answers for the mock final exam. Each answer contain
 * **English Explanation**: KL Divergence is asymmetric, meaning the order of arguments matters. It is a measure of divergence, not a true metric distance.
 * **بالعربي**: الـ KL Divergence مش متماثلة. يعني الترتيب بيفرق: حساب الفرق بين P و Q مش بيساوي الفرق بين Q و P.
 
-### 6. **b. It is prefix-free (valid prefix code).**
-* **English Explanation**: A prefix code is prefix-free if no codeword is a prefix of any other codeword. In the set `(01, 10, 00, 110, 111)`:
-  * `01` is not a prefix of any other.
-  * `10` is not a prefix.
-  * `00` is not a prefix.
-  * `110` and `111` do not start with any other codes. None is a prefix of another, so it is a valid prefix code.
-* **بالعربي**: كود هافمان بيكون صالح لو مفيش أي كود عبارة عن بداية لكود تاني (prefix-free). في المجموعة دي، مفيش أي كود بيبدأ بكود تاني بالكامل، عشان كدا الكود صالح.
+### 6. **b. Because variance must always be positive (> 0) which is hard to guarantee directly, whereas log-variance can be any real number ($-\infty$ to $+\infty$).**
+* **English Explanation**: Variance $\sigma^2$ must strictly be greater than zero. If the encoder network directly outputs variance, we would need to enforce positivity (e.g. using ReLU or exponential), which can lead to unstable training or vanishing gradients. Log-variance $\log(\sigma^2)$ can naturally take any real number value, making it highly stable for standard linear projection layers to output.
+* **بالعربي**: التباين $\sigma^2$ لازم يكون موجب (> 0). لو شبكة الإنكودر طلعت التباين مباشرة، هنحتاج نجبره يكون موجب، وده بيسبب عدم استقرار في التدريب. الـ log-variance ممكن يكون أي رقم حقيقي (سالب أو موجب)، وده طبيعي ومستقر للشبكات العصبية.
 
 ### 7. **c. To freeze the Generator's weights and prevent gradients from updating G during D's step.**
 * **English Explanation**: Calling `.detach()` cuts the gradients in the computation graph. During the Discriminator's training step, we feed D fake images but we only want to update D's weights, not G's. Detaching the fake images blocks gradients from flowing back to G.
@@ -183,37 +187,41 @@ Here are the detailed model answers for the mock final exam. Each answer contain
 
 ## 📂 Section II: Tracing Answers & Explanations
 
-### Q1: Huffman Coding
-**Frequencies:** `z: 10`, `w: 20`, `t: 30`, `x: 45`, `y: 45`. Total = 150.
+### Q1: Forward Diffusion Step Tracing
+Given:
+* $x_0 = [0.8, -0.4, 0.1, -0.2]$
+* $\alpha_0 = 0.9, \alpha_1 = 0.8$
+* $\epsilon_0 = [0.1, 0.2, -0.1, 0.3]$
+* $\epsilon_1 = [-0.2, 0.1, 0.4, -0.1]$
 
-**Step-by-Step Construction:**
-1. **Combine `z` (10) and `w` (20)** → Node `(zw)` with frequency 30.
-   * Remaining nodes: `t` (30), `(zw)` (30), `x` (45), `y` (45).
-2. **Combine `t` (30) and `(zw)` (30)** → Node `(tzw)` with frequency 60.
-   * Remaining nodes: `x` (45), `y` (45), `(tzw)` (60).
-3. **Combine `x` (45) and `y` (45)** → Node `(xy)` with frequency 90.
-   * Remaining nodes: `(tzw)` (60), `(xy)` (90).
-4. **Combine `(tzw)` (60) and `(xy)` (90)** → Root with frequency 150.
+**Formula:**
+$$x_t = \sqrt{\alpha_{t-1}} x_{t-1} + \sqrt{1 - \alpha_{t-1}} \epsilon_{t-1}$$
 
-**Huffman Encoding Tree (Left = 0, Right = 1):**
-```mermaid
-graph TD
-    Root((150)) -->|0| tzw((60))
-    Root -->|1| xy((90))
-    tzw -->|0| t[t: 30]
-    tzw -->|1| zw((30))
-    zw -->|0| z[z: 10]
-    zw -->|1| w[w: 20]
-    xy -->|0| x[x: 45]
-    xy -->|1| y[y: 45]
-```
+#### **a) Calculate $x_1$ ($t=1$):**
+$$x_1 = \sqrt{\alpha_0} x_0 + \sqrt{1 - \alpha_0} \epsilon_0$$
+* Calculate coefficients:
+  * $\sqrt{\alpha_0} = \sqrt{0.9} \approx 0.94868$
+  * $\sqrt{1 - \alpha_0} = \sqrt{0.1} \approx 0.31623$
+* Compute:
+  $$\sqrt{\alpha_0} x_0 = 0.94868 \times [0.8, -0.4, 0.1, -0.2] = [0.7589, -0.3795, 0.0949, -0.1897]$$
+  $$\sqrt{1 - \alpha_0} \epsilon_0 = 0.31623 \times [0.1, 0.2, -0.1, 0.3] = [0.0316, 0.0632, -0.0316, 0.0949]$$
+* Sum element-wise:
+  $$x_1 = [0.7589 + 0.0316, -0.3795 + 0.0632, 0.0949 - 0.0316, -0.1897 + 0.0949]$$
+  $$\mathbf{x_1 \approx [0.7906, -0.3162, 0.0632, -0.0949]}$$
 
-**Resulting Codes:**
-* **`t`**: `00` (length 2)
-* **`z`**: `010` (length 3)
-* **`w`**: `011` (length 3)
-* **`x`**: `10` (length 2)
-* **`y`**: `11` (length 2)
+---
+
+#### **b) Calculate $x_2$ ($t=2$):**
+$$x_2 = \sqrt{\alpha_1} x_1 + \sqrt{1 - \alpha_1} \epsilon_1$$
+* Calculate coefficients:
+  * $\sqrt{\alpha_1} = \sqrt{0.8} \approx 0.89443$
+  * $\sqrt{1 - \alpha_1} = \sqrt{0.2} \approx 0.44721$
+* Compute:
+  $$\sqrt{\alpha_1} x_1 = 0.89443 \times [0.7906, -0.3162, 0.0632, -0.0949] \approx [0.7071, -0.2828, 0.0565, -0.0849]$$
+  $$\sqrt{1 - \alpha_1} \epsilon_1 = 0.44721 \times [-0.2, 0.1, 0.4, -0.1] = [-0.0894, 0.0447, 0.1789, -0.0447]$$
+* Sum element-wise:
+  $$x_2 = [0.7071 - 0.0894, -0.2828 + 0.0447, 0.0565 + 0.1789, -0.0849 - 0.0447]$$
+  $$\mathbf{x_2 \approx [0.6177, -0.2381, 0.2355, -0.1296]}$$
 
 ---
 

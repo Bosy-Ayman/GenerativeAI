@@ -1,228 +1,10 @@
 # 📝 Past Exam Related Questions & Solutions
 
-This document gathers all relevant, non-PCA questions from the Midterms (2022, 2023) and Finals (2023, 2024) of the Generative AI (AI442) course. Detailed solutions, step-by-step math derivations, and Python code blocks are provided.
+This document gathers all relevant, non-PCA and non-Huffman questions from the Midterms (2022, 2023) and Finals (2023, 2024) of the Generative AI (AI442) course. Detailed solutions, step-by-step math derivations, and Python code blocks are provided.
 
 ---
 
-## 📂 Section 1: Huffman Coding Questions
-
-### 1. Midterm 2022 — Question 1 [3 Marks]
-**Question:**
-If you have a message to be encoded by the Huffman Algorithm:
-The message contains: 27 letters of "w", 27 letters of "m", 27 letters of "z", 28 letters of "k", and 28 letters of "R".
-Build the Encoding Tree, and generate the Codes for each letter.
-
-**Step-by-Step Solution:**
-1. **List the frequencies of the leaf nodes:**
-   - `z`: 27
-   - `m`: 27
-   - `w`: 27
-   - `k`: 28
-   - `R`: 28
-
-2. **Combine the two lowest frequencies:**
-   - Combine `z` (27) and `m` (27) → Node `(zm)` with frequency 54.
-   - Remaining nodes: `w` (27), `k` (28), `R` (28), `(zm)` (54).
-
-3. **Combine the next two lowest frequencies:**
-   - Combine `w` (27) and `k` (28) → Node `(wk)` with frequency 55.
-   - Remaining nodes: `R` (28), `(zm)` (54), `(wk)` (55).
-
-4. **Combine the next two lowest frequencies:**
-   - Combine `R` (28) and `(zm)` (54) → Node `(Rzm)` with frequency 82.
-   - Remaining nodes: `(wk)` (55), `(Rzm)` (82).
-
-5. **Combine the remaining two nodes to form the Root:**
-   - Combine `(wk)` (55) and `(Rzm)` (82) → Root with frequency 137.
-
-6. **Build the Tree and assign codes (Left = 0, Right = 1):**
-   ```mermaid
-   graph TD
-       Root((137)) -->|0| wk((55))
-       Root -->|1| Rzm((82))
-       wk -->|0| w[w: 27]
-       wk -->|1| k[k: 28]
-       Rzm -->|0| R[R: 28]
-       Rzm -->|1| zm((54))
-       zm -->|0| z[z: 27]
-       zm -->|1| m[m: 27]
-   ```
-
-**Final Codes:**
-* **`w`**: `00` (length 2)
-* **`k`**: `01` (length 2)
-* **`R`**: `10` (length 2)
-* **`z`**: `110` (length 3)
-* **`m`**: `111` (length 3)
-
----
-
-### 2. Midterm 2023 — Question 1 [4 Marks]
-**Question:**
-If you have a message to be encoded by the Huffman Algorithm:
-The message contains: 300 letters of "A", 160 letters of "F", 35 letters of "B", 40 letters of "K", 100 letters of "a", and 180 letters of "m".
-Build the Encoding Tree, and generate the Codes for each letter.
-
-**Step-by-Step Solution:**
-1. **List the frequencies:**
-   - `B`: 35
-   - `K`: 40
-   - `a`: 100
-   - `F`: 160
-   - `m`: 180
-   - `A`: 300
-
-2. **Combine the two lowest:**
-   - Combine `B` (35) and `K` (40) → Node `(BK)` with frequency 75.
-   - Remaining: `a` (100), `F` (160), `m` (180), `A` (300), `(BK)` (75).
-
-3. **Combine the two lowest:**
-   - Combine `(BK)` (75) and `a` (100) → Node `(BKa)` with frequency 175.
-   - Remaining: `F` (160), `m` (180), `A` (300), `(BKa)` (175).
-
-4. **Combine the two lowest:**
-   - Combine `F` (160) and `(BKa)` (175) → Node `(FBKa)` with frequency 335.
-   - Remaining: `m` (180), `A` (300), `(FBKa)` (335).
-
-5. **Combine the two lowest:**
-   - Combine `m` (180) and `A` (300) → Node `(mA)` with frequency 480.
-   - Remaining: `(FBKa)` (335), `(mA)` (480).
-
-6. **Combine the final two nodes to form the Root:**
-   - Combine `(FBKa)` (335) and `(mA)` (480) → Root with frequency 815.
-
-7. **Build the Tree and assign codes (Left = 0, Right = 1):**
-   ```mermaid
-   graph TD
-       Root((815)) -->|0| FBKa((335))
-       Root -->|1| mA((480))
-       FBKa -->|0| F[F: 160]
-       FBKa -->|1| BKa((175))
-       BKa -->|0| BK((75))
-       BKa -->|1| a[a: 100]
-       BK -->|0| B[B: 35]
-       BK -->|1| K[K: 40]
-       mA -->|0| m[m: 180]
-       mA -->|1| A[A: 300]
-   ```
-
-**Final Codes:**
-* **`F`**: `00`
-* **`B`**: `0100`
-* **`K`**: `0101`
-* **`a`**: `011`
-* **`m`**: `10`
-* **`A`**: `11`
-
----
-
-### 3. Final 2023 — Section II Tracing Question 1 [5 Marks]
-**Question:**
-If you have a message to be encoded by the Huffman Algorithm:
-The message contains: 216 letters of "w", 57 letters of "s", 28 letters of "u", 26 letters of "g", 100 letters of "a", and 94 letters of "m".
-Build the Encoding Tree, and generate the Codes for each letter.
-
-**Step-by-Step Solution:**
-1. **List the frequencies:**
-   - `g`: 26
-   - `u`: 28
-   - `s`: 57
-   - `m`: 94
-   - `a`: 100
-   - `w`: 216
-
-2. **Combine lowest two:**
-   - Combine `g` (26) and `u` (28) → `(gu)` (54).
-   - Remaining: `s` (57), `m` (94), `a` (100), `w` (216), `(gu)` (54).
-
-3. **Combine lowest two:**
-   - Combine `(gu)` (54) and `s` (57) → `(gus)` (111).
-   - Remaining: `m` (94), `a` (100), `w` (216), `(gus)` (111).
-
-4. **Combine lowest two:**
-   - Combine `m` (94) and `a` (100) → `(ma)` (194).
-   - Remaining: `w` (216), `(gus)` (111), `(ma)` (194).
-
-5. **Combine lowest two:**
-   - Combine `(gus)` (111) and `(ma)` (194) → `(gusma)` (305).
-   - Remaining: `w` (216), `(gusma)` (305).
-
-6. **Combine to Root:**
-   - Combine `w` (216) and `(gusma)` (305) → Root (521).
-
-7. **Assign Codes (Left = 0, Right = 1):**
-   ```mermaid
-   graph TD
-       Root((521)) -->|0| w[w: 216]
-       Root -->|1| gusma((305))
-       gusma -->|0| gus((111))
-       gusma -->|1| ma((194))
-       gus -->|0| gu((54))
-       gus -->|1| s[s: 57]
-       gu -->|0| g[g: 26]
-       gu -->|1| u[u: 28]
-       ma -->|0| m[m: 94]
-       ma -->|1| a[a: 100]
-   ```
-
-**Final Codes:**
-* **`w`**: `0`
-* **`g`**: `1000`
-* **`u`**: `1001`
-* **`s`**: `101`
-* **`m`**: `110`
-* **`a`**: `111`
-
----
-
-### 4. Final 2024 — Section II Tracing Question 1 [5 Marks]
-**Question:**
-If you have a message to be encoded by the Huffman Algorithm:
-The message contains: 33 letters of "U", 33 letters of "G", 100 letters of "A", 33 letters of "M", and 33 letters of "K".
-Build the Encoding Tree, and generate the Codes for each letter.
-
-**Step-by-Step Solution:**
-1. **List the frequencies:**
-   - `U`: 33, `G`: 33, `M`: 33, `K`: 33, `A`: 100
-
-2. **Combine lowest two (e.g., U and G):**
-   - Combine `U` (33) and `G` (33) → `(UG)` (66).
-   - Remaining: `M` (33), `K` (33), `A` (100), `(UG)` (66).
-
-3. **Combine lowest two (M and K):**
-   - Combine `M` (33) and `K` (33) → `(MK)` (66).
-   - Remaining: `A` (100), `(UG)` (66), `(MK)` (66).
-
-4. **Combine lowest two (UG and MK):**
-   - Combine `(UG)` (66) and `(MK)` (66) → `(UGMK)` (132).
-   - Remaining: `A` (100), `(UGMK)` (132).
-
-5. **Combine to Root:**
-   - Combine `A` (100) and `(UGMK)` (132) → Root (232).
-
-6. **Assign Codes (Left = 0, Right = 1):**
-   ```mermaid
-   graph TD
-       Root((232)) -->|0| A[A: 100]
-       Root -->|1| UGMK((132))
-       UGMK -->|0| UG((66))
-       UGMK -->|1| MK((66))
-       UG -->|0| U[U: 33]
-       UG -->|1| G[G: 33]
-       MK -->|0| M[M: 33]
-       MK -->|1| K[K: 33]
-   ```
-
-**Final Codes:**
-* **`A`**: `0`
-* **`U`**: `100`
-* **`G`**: `101`
-* **`M`**: `110`
-* **`K`**: `111`
-
----
-
-## 📂 Section 2: Word2Vec Tracing Questions
+## 📂 Section 1: Word2Vec Tracing Questions
 
 ### 1. Final 2023 — Section II Tracing Question 3 [5 Marks]
 **Question:**
@@ -274,9 +56,9 @@ Given the following word embeddings in 2D space:
 | gives | `(-0.56, -0.68)` | oats | `(-1.10, -0.50)` |
 | good | `(0.29, 0.20)` | popular | `(0.39, 0.34)` |
 | grain | `(0.29, -0.78)` | powerful | `(-0.87, 0.12)` |
-| growth | `(-0.53, -0.59)` | quick | `(0.90, -0.014)` |
-| hello | `(-0.74, -0.58)` | race | `(-0.12, -0.93)` |
-| world | `(0.30, -0.04)` | record | `(1.03, 0.12)` |
+| quick | `(0.90, -0.014)` | race | `(-0.12, -0.93)` |
+| hello | `(-0.74, -0.58)` | record | `(1.03, 0.12)` |
+| world | `(0.30, -0.04)` | | |
 
 a) Plot the vectors of all given words.
 b) In case we generate a new vector as `newVec = "horse" + "record"`, then from the plotted space determine the nearest two words for the `newVec`.
@@ -301,12 +83,12 @@ b) In case we generate a new vector as `newVec = "horse" + "record"`, then from 
 
 ---
 
-## 📂 Section 3: KL Divergence Tracing Questions
+## 📂 Section 2: KL Divergence Tracing Questions
 
 ### 1. Final 2023 — Section II Tracing Question 4 [6 Marks]
 **Question:**
 Calculate the KL-Divergences $D_{KL}(P || Q)$ and $D_{KL}(Q || P)$ for the following distributions over $x \in \{-1, -0.5, 0.5, 1\}$:
-*(Hint: $\ln(x) = 2.303 \log_{10}(x)$)*
+*(Hint: $\ln(y) = 2.303 \log_{10}(y)$)*
 
 | $x$ | $-1$ | $-0.5$ | $0.5$ | $1$ |
 |---|---|---|---|---|
@@ -418,7 +200,7 @@ $$D_{KL}(Q || P) = 0.1410 + 0.0895 + 0.0559 - 0.1181 = \mathbf{0.1683}$$
 
 ---
 
-## 📂 Section 4: Coding Questions
+## 📂 Section 3: Coding Questions
 
 ### 1. Word2Vec Layer Weights Filtering
 **2023 Question (6 Marks):**

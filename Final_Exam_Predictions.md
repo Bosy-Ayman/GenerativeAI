@@ -1,6 +1,6 @@
 # 🔮 Final Exam Predictions — Generative AI (AI442)
 
-This document contains predictions and analysis for tomorrow's exam based on actual exam patterns from the past two years. Since **PCA is excluded**, we focus entirely on **Word2Vec, Autoencoders, Huffman Coding, VAEs, GANs/CGANs, and Diffusion Models**.
+This document contains predictions and analysis for tomorrow's exam based on actual exam patterns from the past two years. Since **PCA and Huffman Coding are excluded**, we focus entirely on **Word2Vec, Autoencoders, VAEs, GANs/CGANs, and Diffusion Models**.
 
 The exam is structured as:
 * **8 Marks**: Multiple Choice Questions (MCQs) — 8 Questions
@@ -10,7 +10,7 @@ The exam is structured as:
 ---
 
 ## 🎯 Part 1: MCQ Predictions [8 Marks]
-The MCQs will test conceptual understanding, parameter counts, activation functions, and mathematical properties. Expect exactly 8 questions on the following high-frequency concepts:
+The MCQs will test conceptual understanding, parameter counts, activation functions, and mathematical properties. Expect exactly 8 questions on the following concepts:
 
 ### Prediction 1: Autoencoder Architecture & Sizing
 * **Concept**: Sizing layer counts symmetrically.
@@ -32,10 +32,10 @@ The MCQs will test conceptual understanding, parameter counts, activation functi
   * **Likely Q**: "Which of the following is true for KL Divergence?" → *Answer: $D_{KL}(P \| Q) \neq D_{KL}(Q \| P)$*.
   * **Likely Q**: "KL Divergence measure result may be..." → *Answer: $\geq 0$*.
 
-### Prediction 4: Huffman Codes and Prefix Properties
-* **Concept**: A valid Huffman code must satisfy the prefix property (no code is a prefix of another).
-  * **Likely Q**: "If `(001, 101, 00, 111, 110)` could be Huffman codes if we remove..." → *Answer: Remove 001 (because 00 is a prefix of 001)*.
-  * **Likely Q**: "Which of the following Huffman codes could be considered a valid latent space?" → *Answer: The set of codes that is prefix-free (e.g., `(0, 10, 11)` or `(101, 001, 111, 100, 000)`)*.
+### Prediction 4: VAE log-variance Output
+* **Concept**: Why we output log-variance instead of variance in VAE.
+  * **Rule**: Variance $\sigma^2$ must always be positive (> 0), which is hard for a neural network to guarantee directly without constraints. log-variance $\log(\sigma^2)$ can be any real number ($-\infty$ to $+\infty$), which is natural for dense layers to output.
+  * **Likely Q**: "Why does the VAE encoder output log-variance $\log(\sigma^2)$ instead of variance $\sigma^2$?" → *Answer: Because log-variance can be any real number, making it easier for the network to output without constraints.*
 
 ### Prediction 5: VAE Latent Vector Sampling
 * **Concept**: The latent vector $z$ in a VAE is not a deterministic learned layer; it is sampled from a distribution: $z \sim \mathcal{N}(\mu, \sigma^2)$ using the reparameterization trick.
@@ -61,11 +61,12 @@ The MCQs will test conceptual understanding, parameter counts, activation functi
 ## 📊 Part 2: Tracing Predictions [20 Marks]
 The tracing section will have 3 questions requiring manual calculations and plotting.
 
-### Tracing Q1: Huffman Coding [5 Marks]
-* **Prediction**: You will be given a message with character frequencies (e.g., A: 100, B: 30, etc.) and asked to:
-  1. Build the encoding tree (always combine the two lowest frequencies).
-  2. Write down the generated binary code for each character.
-* **Pro-Tip**: Keep your tree neat! Annotate left branches with `0` and right branches with `1`. Verify that the average code length is optimized (higher frequency characters get shorter codes).
+### Tracing Q1: Forward Diffusion Step Tracing [5 Marks]
+* **Prediction**: You will be given a small 1D original image array $x_0$, a noise schedule of $\alpha_t$ values, and random noise vectors $\epsilon_t$. You will be asked to compute the noisy image vectors $x_1$ and $x_2$ at timesteps $t=1$ and $t=2$ step-by-step.
+* **Formula**:
+  * $x_1 = \sqrt{\alpha_0} x_0 + \sqrt{1 - \alpha_0} \epsilon_0$
+  * $x_2 = \sqrt{\alpha_1} x_1 + \sqrt{1 - \alpha_1} \epsilon_1$
+* **Pro-Tip**: Calculate the square roots to 4 decimal places first. Perform element-wise scaling and addition carefully.
 
 ### Tracing Q2: Word2Vec Vector Addition & Plotting [5 Marks]
 * **Prediction**: You will be given a table of 15–20 words with 2D embedding coordinates. You will be asked to:
@@ -78,7 +79,7 @@ The tracing section will have 3 questions requiring manual calculations and plot
 * **Prediction**: You will be given two probability distributions $P(x)$ and $Q(x)$ over a small set of values $x \in \{-1, -0.5, 0.5, 1\}$ and asked to compute:
   1. $D_{KL}(P \| Q)$
   2. $D_{KL}(Q \| P)$
-* **Pro-Tip**: Use the hint formula: $\ln(x) = 2.303 \log_{10}(x)$ carefully. Write down the term for each value of $x$ to show your steps and avoid calculation errors. Remember that the final sum cannot be negative.
+* **Pro-Tip**: Use the hint formula: $\ln(y) = 2.303 \log_{10}(y)$ carefully. Write down the term for each value of $x$ to show your steps and avoid calculation errors. Remember that the final sum cannot be negative.
 
 ---
 
