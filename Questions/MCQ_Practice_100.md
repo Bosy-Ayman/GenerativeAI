@@ -708,23 +708,23 @@
 
 ## 📈 Probability & KL Divergence (46–60)
 
-| # | Answer | Explanation |
-|---|--------|-------------|
-| 46 | **B** | Conditional probability measures the likelihood of an event given that another event is known. |
-| 47 | **B** | From conditional probability definition: $P(A, B) = P(A|B) \cdot P(B)$. |
-| 48 | **B** | Bayes' rule calculates inverse conditional probability: $P(A|B) = P(B|A)P(A)/P(B)$. |
-| 49 | **B** | The expected value is the probability-weighted average of all possible values of a random variable. |
-| 50 | **B** | Expected value = $(0.2 \cdot 500) + (0.5 \cdot 100) + (0.3 \cdot -200) = 100 + 50 - 60 = 90$. |
-| 51 | **C** | KL Divergence measures the asymmetric information difference between two distributions. |
-| 52 | **B** | $D_{KL}(P \| Q) = \sum P(x) \ln(P(x) / Q(x))$ is the standard Shannon entropy-based definition. |
-| 53 | **B** | KL Divergence is always non-negative ($D_{KL} \geq 0$) and equals 0 if and only if $P = Q$. |
-| 54 | **B** | When $P = Q$, then $\ln(P(x)/Q(x)) = \ln(1) = 0$, so the divergence sum is 0. |
-| 55 | **B** | $D_{KL}(P \| Q) \neq D_{KL}(Q \| P)$ proves KL is asymmetric (not a true distance metric). |
-| 56 | **B** | If $Q(x) = 0$ and $P(x) > 0$, the ratio division by zero yields infinite divergence. |
-| 57 | **B** | Natural log base conversion: $\ln(y) = \ln(10) \cdot \log_{10}(y) \approx 2.303 \cdot \log_{10}(y)$. |
-| 58 | **C** | The KL term forces encoder distributions to approximate $\mathcal{N}(0, I)$, preventing disorganized space. |
-| 59 | **B** | As distributions overlap less, the ratio $P(x)/Q(x)$ grows at the main density regions of $P$, increasing KL. |
-| 60 | **B** | The expectation term measures the log-likelihood of the sampled latent vectors under the prior prior. |
+| #   | Answer | Explanation                                                                                                   |                 |               |
+| --- | ------ | ------------------------------------------------------------------------------------------------------------- | --------------- | ------------- |
+| 46  | **B**  | Conditional probability measures the likelihood of an event given that another event is known.                |                 |               |
+| 47  | **B**  | From conditional probability definition: $P(A, B) = P(A                                                       | B) \cdot P(B)$. |               |
+| 48  | **B**  | Bayes' rule calculates inverse conditional probability: $P(A                                                  | B) = P(B        | A)P(A)/P(B)$. |
+| 49  | **B**  | The expected value is the probability-weighted average of all possible values of a random variable.           |                 |               |
+| 50  | **B**  | Expected value = $(0.2 \cdot 500) + (0.5 \cdot 100) + (0.3 \cdot -200) = 100 + 50 - 60 = 90$.                 |                 |               |
+| 51  | **C**  | KL Divergence measures the asymmetric information difference between two distributions.                       |                 |               |
+| 52  | **B**  | $D_{KL}(P \| Q) = \sum P(x) \ln(P(x) / Q(x))$ is the standard Shannon entropy-based definition.               |                 |               |
+| 53  | **B**  | KL Divergence is always non-negative ($D_{KL} \geq 0$) and equals 0 if and only if $P = Q$.                   |                 |               |
+| 54  | **B**  | When $P = Q$, then $\ln(P(x)/Q(x)) = \ln(1) = 0$, so the divergence sum is 0.                                 |                 |               |
+| 55  | **B**  | $D_{KL}(P \| Q) \neq D_{KL}(Q \| P)$ proves KL is asymmetric (not a true distance metric).                    |                 |               |
+| 56  | **B**  | If $Q(x) = 0$ and $P(x) > 0$, the ratio division by zero yields infinite divergence.                          |                 |               |
+| 57  | **B**  | Natural log base conversion: $\ln(y) = \ln(10) \cdot \log_{10}(y) \approx 2.303 \cdot \log_{10}(y)$.          |                 |               |
+| 58  | **C**  | The KL term forces encoder distributions to approximate $\mathcal{N}(0, I)$, preventing disorganized space.   |                 |               |
+| 59  | **B**  | As distributions overlap less, the ratio $P(x)/Q(x)$ grows at the main density regions of $P$, increasing KL. |                 |               |
+| 60  | **B**  | The expectation term measures the log-likelihood of the sampled latent vectors under the prior prior.         |                 |               |
 
 ---
 

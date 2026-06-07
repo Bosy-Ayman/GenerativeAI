@@ -14,13 +14,13 @@
 What is the missed layer size in the Autoencoder network structure `[100 - 40 - ? - 40 - 100]` to make it a valid compressed Autoencoder?
 * a. 50
 * b. 100
-* c. 20
+* ==c. 20==
 * d. 40
 
 ### 2. Decoder Layer Matching
 What is the size of the final layer in the Autoencoder structure `[64 - 16 - 4 - 16 - ?]` to make it a reconstructive Autoencoder?
 * a. 4
-* b. 64
+* ==b. 64==
 * c. 16
 * d. any number less than 4
 

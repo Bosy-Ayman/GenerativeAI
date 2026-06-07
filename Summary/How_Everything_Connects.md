@@ -17,7 +17,9 @@ Imagine you're a **chef (شيف)** and your dream is to **invent new recipes (ت
 | **Ch 2: AutoEncoder** | How to compress a recipe to notes, then cook from notes | Your notes only work for recipes you've seen before |
 | **Ch 3: Latent Walk** | Walking between two recipes creates something in between | But there are "dead zones" — some notes produce garbage food |
 | **Ch 4: VAE** | Organize your notebook so EVERY note makes a valid recipe | Recipes are ok but a bit "average" / blurry |
-| **Ch 5: Diffusion** | A totally new approach — start with random mess, learn to clean it up | Slow, but produces the BEST food |
+| **Ch 5: GAN** | Set up a competition (cook vs critic) to produce sharp, realistic recipes | Extremely sharp recipes, but you can't control what kind of dish is made |
+| **Ch 6: CGAN** | Feed a label (dish name) to both cook and critic to control the recipe generated | You can control the output, but training is unstable (mode collapse / fighting) |
+| **Ch 7: Diffusion** | A totally new approach — start with random mess, learn to clean it up step-by-step | Stable training and excellent results, but slow generation process |
 
 **The dream was always the same: CREATE something NEW that never existed before. (الهدف دايماً واحد: نخلق حاجة جديدة ما كانتش موجودة)**
 
@@ -276,17 +278,105 @@ images = decoder.predict(z)                     # ALWAYS produces valid images!
 > **بالعربي:** لأن خسارة KL أجبرت كل التوزيعات تكون قريبة من N(0,1)، أي نقطة عشوائية من N(0,1) هتنتج صورة صالحة. مفيش فراغات! مفيش صور مشوهة! كل نقطة بتفك تشفيرها لحاجة ليها معنى!
 
 ### 🔗 THE BRIDGE TO CHAPTER 5:
-> VAE can generate! But the images are sometimes **blurry** — because the KL loss forces everything toward the average, fine details get lost.
+> VAE can generate! But the images are sometimes **blurry** — because the pixel-wise losses (like MSE or Cross-Entropy) and the KL loss force everything toward standard distributions and average reconstructions. Fine details get lost.
 >
-> Is there a completely different way to generate? One that doesn't need a bottleneck at all?
+> **How do we fix the blurriness?** We stop using pixel-by-pixel average losses. Instead of calculating how close pixels are mathematically, we train a second neural network to *judge* if the generated image looks real or fake.
 >
-> **الـ VAE بيولد صور! بس أحياناً بتكون ضبابية. في طريقة تانية مختلفة تماماً؟**
+> **الـ VAE بيولد صور! بس أحياناً بتكون ضبابية بسبب خسارة الـ Pixel-wise اللي بتجبر الموديل يولد متوسط الألوان. إزاي نصلح ده؟**
 >
-> Yes. **Destroy an image with noise, then learn to UN-destroy it.** That's Diffusion.
+> We introduce a competitive game: a **Generator** creates images, and a **Discriminator** judges them. That is **GAN**!
 
 ---
 
-## 📖 Chapter 5: Diffusion — "Destroy, Then Learn to Reverse"
+## 📖 Chapter 5: GAN — "The Competitive Game for Sharpness"
+
+### Why Did We Come Here?
+VAE outputs were too blurry because standard reconstruction losses average out pixel values to minimize loss. We need a loss function that prioritizes **realism and sharpness**, not pixel-by-pixel averages.
+
+### The Dynamic — The Counterfeiter and the Detective:
+We train two networks competing against each other:
+1. **Generator (G) — المولّد**: Takes random noise $z$ and tries to create a realistic fake image.
+2. **Discriminator (D) — المميّز**: Takes an image (either real from dataset, or fake from Generator) and outputs a probability (0 to 1) representing whether it is real.
+
+```
+Random Noise z ──▶ [Generator G] ──▶ Fake Image ──┐
+                                                    ├──▶ [Discriminator D] ──▶ Real (1) or Fake (0)?
+Real Image from Dataset ──────────────────────────┘
+```
+
+> **بالعربي:** الـ GAN عبارة عن شبكتين في لعبة تنافسية:
+> - **المولّد (G):** بيحاول يعمل صور مزيفة مقنعة جداً عشان يخدع المميّز
+> - **المميّز (D):** بيحاول يكشف هل الصورة حقيقية ولا مزيفة
+>
+> مع التنافس، المولّد بيتعلم يعمل صور في منتهى الدقة والوضوح (مش ضبابية زي الـ VAE)!
+
+### The Mathematical Game (Minimax Loss):
+The objective is to solve the minimax optimization problem using Binary Cross-Entropy loss (`BCELoss`):
+
+$$\min_G \max_D V(D,G) = E_{x \sim p_{data}}[\log D(x)] + E_{z \sim p_z}[\log(1 - D(G(z)))]$$
+
+- **Discriminator wants to MAXIMIZE** the loss (make $D(x) \approx 1$ and $D(G(z)) \approx 0$).
+- **Generator wants to MINIMIZE** the loss (make $D(G(z)) \approx 1$, meaning the fake image is classified as real).
+
+### PyTorch Coding Details:
+- **Gradient Freezing**: When training the Discriminator, we feed G's outputs but call `fake_images.detach()` to stop gradients from flowing back into the Generator.
+- **Normalization**: GANs work best when images are normalized in $[-1, 1]$. Generator final layer uses **Tanh activation**, and we must map output back to $[0, 1]$ using `(img + 1) / 2` for display.
+- **Activations**: D uses `LeakyReLU(0.2)` to ensure small gradients flow for negative values, preventing "dead neurons" during adversarial steps.
+
+### 🔗 THE BRIDGE TO CHAPTER 6:
+> Excellent! We can now generate sharp, realistic images.
+>
+> But there is a huge problem. Standard GAN is **unconditional**. You feed random noise $z$, and G outputs a random image (e.g. a random number).
+>
+> What if you want to generate a *specific* image? Like: "make a digit 7"? You can't control it!
+>
+> **المولّد في الـ GAN العادي بينتج صور حادة وجميلة، بس عشوائية تماماً! لو عايز رقم 7 بالخصوص، مش هتعرف تقوله ده. إزاي نتحكم في التوليد؟**
+>
+> We inject class label information into both G and D. That is **Conditional GAN (CGAN)**!
+
+---
+
+## 📖 Chapter 6: Conditional GAN (CGAN) — "Controlling the Output"
+
+### Why Did We Come Here?
+We want to control *what* class G produces. Unconditional GANs are random; CGANs are conditional.
+
+### The Mechanism — Label Embedding:
+We feed both the noise $z$ AND the class label $y$ (e.g., class `7` for MNIST) into the network:
+- **Generator**: Concatenates $z$ and $y$ to generate class-specific images: $G(z, y) \rightarrow \text{Fake Image of Class } y$.
+- **Discriminator**: Concatenates the image and $y$ to verify if the image is real AND corresponds to the correct class: $D(x, y) \rightarrow \text{Real/Fake probability}$.
+
+```
+Noise z ───┐
+           ├──▶ Concatenate ──▶ [Generator G] ──▶ Fake Image (Class y) ──┐
+Label y ───┘                                                             ├──▶ [Discriminator D] ──▶ Real (1) / Fake (0)
+                                                                         │
+Real Image (Class y) ───────────────────────── Concatenate ──────────────┘
+```
+
+> **بالعربي:** في الـ CGAN بنمرر التصنيف (Label) للمولّد والمميّز مع بعض.
+> - **المولّد:** بياخد الـ noise + التصنيف عشان ينتج صورة للرقم المطلوب بالظبط
+> - **المميّز:** بياخد الصورة + التصنيف عشان يتأكد هل الصورة حقيقية ومطابقة للتصنيف ده ولا لا
+>
+> بنستخدم طبقة عصبية اسمها `nn.Embedding` عشان نحول التصنيفات لـ vectors نقدر ندمجها مع المدخلات.
+
+### 💀 THE PROBLEM — GAN Instabilities:
+Adversarial games are notoriously **unstable**. G and D must improve at the same speed. 
+- If D is too strong → vanishing gradients, G learns nothing.
+- If G is too strong → mode collapse (G finds one safe image that always fools D, and generates only that image over and over).
+
+### 🔗 THE BRIDGE TO CHAPTER 7:
+> GAN and CGAN generate the sharpest images, but training them is like trying to balance a bicycle on a tightrope. It collapses easily.
+>
+> Can we get high-quality generated images with stable training that doesn't involve adversarial competition?
+>
+> **تدريب الـ GAN/CGAN صعب جداً وغير مستقر وبيمر بمشاكل زي الـ Mode Collapse. هل فيه طريقة مستقرة ومبتعتمدش على التنافس بس تدينا صور بجودة عالية؟**
+>
+> Yes. Let's go back to a non-adversarial approach: **Diffusion**.
+
+---
+
+## 📖 Chapter 7: Diffusion — "Destroy, Then Learn to Reverse"
 
 ### Why Did We Come Here?
 VAE generates, but images can be blurry. Diffusion takes a **completely different philosophy**:
@@ -389,17 +479,32 @@ ATTEMPT 3: VAE
 ├── Insight 3: KL loss → forces all distributions near N(0,1) → organized space
 ├── Loss = Reconstruction + KL
 ├── Result: CAN generate new images by sampling z ~ N(0,1) ✓
-└── Limitation: Images can be blurry (KL pushes toward average)
+└── Limitation: Images can be blurry (due to pixel averages and KL constraints)
          │
-         ▼ "Is there a DIFFERENT approach entirely?"
+         ▼ "How do we make the generated images sharp?"
 
-ATTEMPT 4: Diffusion
+ATTEMPT 4: GAN
+├── Insight: Set up an adversarial competition (Generator vs Discriminator)
+├── Loss: Minimax Binary Cross-Entropy loss (fool the critic)
+├── Result: EXTREMELY sharp, realistic images ✓
+└── Limitation: Unconditional generation (no control over class output)
+         │
+         ▼ "How do we control what class G generates?"
+
+ATTEMPT 4.5: Conditional GAN (CGAN)
+├── Insight: Inject class labels (via embeddings) into both G and D
+├── Result: Differentiated, class-controlled sharp image generation ✓
+└── Limitation: High training instability (vanishing gradients, mode collapse)
+         │
+         ▼ "Can we get high quality with stable, non-adversarial training?"
+
+ATTEMPT 5: Diffusion
 ├── Insight: Don't compress at all. Instead:
 │   ├── Forward: Gradually destroy images with noise
-│   └── Reverse: Train model to predict & remove noise
+│   └── Reverse: Train U-Net to predict & remove noise step-by-step
 ├── Key: Model takes (noisy_image, timestep) → predicts noise
-├── Result: HIGH QUALITY generation from pure random noise ✓
-└── Trade-off: Slower (many denoising steps needed)
+├── Result: HIGH QUALITY, stable, diverse generation from pure random noise ✓
+└── Trade-off: Slower (requires iterating T timesteps for reverse process)
 ```
 
 ---
@@ -500,13 +605,16 @@ Lecture 9 (Implementation) ───────────────▶ Turn
 |---|---------|----------|---------|
 | 2a | Word2Vec Theory | Words that appear near similar words should have similar vectors | الكلمات اللي بتيجي جنب بعض لازم يكون ليها vectors متشابهة |
 | 2b | Word2Vec Code | Build pairs → one-hot → train bottleneck network → extract weights = embeddings | ابني أزواج → ترميز → درّب شبكة → استخرج الأوزان = embeddings |
-| 3 | Dense AE | Compress 784 pixels to 32 numbers, then reconstruct — proves bottleneck learning works for images | اضغط 784 بكسل لـ 32 رقم، وارجعهم — إثبات إن البوتلنك بيشتغل مع الصور |
+| 3 | Dense AE | Compress 784 pixels to 32 numbers, then reconstruct — bottleneck concept for images | اضغط 784 بكسل لـ 32 رقم، وارجعهم — إثبات إن البوتلنك بيشتغل مع الصور |
 | 4 | Conv AE | Same idea but with convolutions — understands spatial structure better | نفس الفكرة بس بالـ convolutions — بيفهم العلاقات المكانية أحسن |
 | 5 | Latent Walk | Interpolate between two latent vectors → smooth image morphing, BUT reveals holes in latent space | امشي بين نقطتين في الـ latent space → تحول سلس، لكن بيكشف الفراغات |
 | 6 | VAE Intro | Probability foundations needed for the VAE loss function | أساسيات الاحتمالات اللي محتاجينها لدالة خسارة الـ VAE |
 | 7 | KL Divergence | Expected value + KL divergence = tools to measure distribution differences | القيمة المتوقعة + KL = أدوات لقياس الفرق بين التوزيعات |
-| 8 | VAE Loss | Total loss = reconstruction loss + KL loss — two forces that create organized latent space | الخسارة الكلية = خسارة إعادة البناء + خسارة KL — قوتين بيخلقوا فضاء خفي منظم |
+| 8 | VAE Loss | Total loss = reconstruction loss + KL loss — forces that create organized latent space | الخسارة الكلية = خسارة إعادة البناء + خسارة KL — قوتين بيخلقوا فضاء خفي منظم |
 | 9 | VAE Implementation | Reparameterization trick + full code — turn the math into a working model | حيلة إعادة المعاملة + الكود الكامل — حول الرياضيات لموديل شغال |
+| 10 | GAN Theory | Generator and Discriminator compete in a competitive minimax game to produce sharp fakes | شبكتين بيتنافسوا (المولّد والمميّز) في لعبة تنافسية لإنتاج صور حادة |
+| 11 | GAN Implementation | DCGAN implementation details: Tanh outputs in [-1,1], PyTorch gradient detaching, LeakyReLU | تفاصيل كود الـ DCGAN: مخرجات Tanh في نطاق [-1,1] وفصل الجراديانتس |
+| 12 | CGAN Implementation | Inject label embeddings into both networks to control what class is generated | إضافة الـ Label embeddings للتحكم في صنف الصورة المولّدة |
 | 13 | Diffusion | Add noise gradually → train model to predict noise → generate by denoising random noise | ضيف تشويش تدريجي → درّب موديل يتوقع التشويش → ولّد بإزالة التشويش |
 
 ---
@@ -514,15 +622,18 @@ Lecture 9 (Implementation) ───────────────▶ Turn
 ## 🧠 Memory Tricks — حيل للحفظ
 
 ### Trick 1: The Evolution Story
-**W2V → AE → Walk → VAE → Diffusion** = Each one FIXES a problem of the previous:
+**W2V → AE → Walk → VAE → GAN → CGAN → Diffusion** = Each one FIXES a problem of the previous:
 - W2V can describe → but not images → **AE**
 - AE can compress → but latent space has holes → **Walk confirms it**
 - Holes → fill with clouds → **VAE**
-- VAE is blurry → different approach → **Diffusion**
+- VAE is blurry → compete to make it sharp → **GAN**
+- GAN is uncontrollable → add label embeddings → **CGAN**
+- CGAN is unstable during training → stable noising & denoising → **Diffusion**
 
 ### Trick 2: Remember the Losses
 - **AE**: "Make it look the same" = **Reconstruction only**
 - **VAE**: "Make it look the same + keep it organized" = **Reconstruction + KL**
+- **GAN/CGAN**: "Win the game against the Discriminator" = **Minimax BCELoss**
 - **Diffusion**: "Guess what noise I added" = **MSE on noise**
 
 ### Trick 3: The Formula Chain
@@ -532,10 +643,11 @@ Normal Distribution → Expected Value → KL Divergence → VAE Loss → Repara
 ```
 Each formula feeds into the next. They're a chain, not separate topics.
 
-### Trick 4: The Three Ways to Generate
+### Trick 4: The Four Ways to Generate
 ```
 VAE Way:       Random numbers → Decoder → Image         (one step, fast, blurry)
-Diffusion Way: Random noise → Denoise ×100 → Image      (many steps, slow, sharp)
+GAN Way:       Random numbers → Generator → Image       (one step, fast, sharp, unstable)
+Diffusion Way: Random noise → Denoise ×100 → Image      (many steps, slow, sharp, stable)
 Latent Walk:   Point A → interpolate → Point B → Decode  (not truly "new", just in-between)
 ```
 
