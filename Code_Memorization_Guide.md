@@ -253,3 +253,61 @@ g_loss = criterion(output, real_labels)  # Target is real_labels (1) to fool D!
 * **Discriminator**: بنستخدم `fake_imgs.detach()` عشان نوقف الـ gradients للـ Generator. والـ labels هي `real_labels` للحقيقي و `fake_labels` للمزيف.
 * **Generator**: مش بنستخدم detach، وبنقارن مخرجات الـ Discriminator للصور المزيفة بـ `real_labels` (الهدف 1) لأن المولد عايز يخدع المميّز.
 * **صور الـ GAN** دايماً بنعمل ليها Normalize لـ `[-1, 1]` عشان الـ Generator بينتهي بـ `Tanh`. لما بنعرضها بنرجعها لـ `[0, 1]` بالقانون: `(img + 1) / 2`.
+
+---
+
+## 📋 Sheet-Specific Coding Patterns (من الشيت بالظبط)
+
+These are the exact code blocks written in the repository's `Sheet.pdf` for VAE and GAN manipulation.
+
+### 1. VAE Latent Dimension Odd/Even Shift (Page 5 of Sheet)
+* **Goal**: Shift even indices of Z down by `val`, and odd indices of Z up by `val` (with `val = 1.3`), then decode both original and modified.
+* **The Code**:
+```python
+n = 10 
+z_random = np.random.normal(size=(n, latent_dim))  
+
+ZZ = np.zeros((n, latent_dim))  
+val = 1.3 
+for j in range(n): 
+    for k in range(latent_dim):     
+        if k % 2 == 0: 
+            ZZ[j, k] = z_random[j, k] - val    # Even dimensions: subtract
+        else: 
+            ZZ[j, k] = z_random[j, k] + val    # Odd dimensions: add  
+
+genImg  = decoder.predict(z_random)            # Generate from original
+genImg2 = decoder.predict(ZZ)                  # Generate from modified
+```
+* **Explanation**: Modifying the dimensions of $z$ directly changes the visual features of the decoded output (latent walking), but it does **not** change the encoder's predicted distribution parameters ($\mu, \sigma$).
+
+### 2. GAN Latent Interpolation Morphing (Page 6 of Sheet)
+* **Goal**: Create $z_1, z_2$, sum them to $z$, decode, and step-modify $z_1, z_2$ by adding `0.3` to a dimension `i` for 20 steps.
+* **The Code**:
+```python
+G.eval() 
+
+# 1. Create two random 4D noise vectors in PyTorch
+z1 = torch.randn(1, latent_dim, 1, 1, device=device, requires_grad=True) 
+z2 = torch.randn(1, latent_dim, 1, 1, device=device, requires_grad=True) 
+
+# 2. Generate and normalize original fakes to [0,1]
+gen1 = G(z1).detach().cpu()  
+gen2 = G(z2).detach().cpu()  
+gen1 = ((gen1.cpu() + 1) / 2) 
+gen2 = ((gen2.cpu() + 1) / 2) 
+
+num_steps = 20 
+
+# 3. Step-by-step morphing loop
+for step in range(num_steps):  
+    z = z1 + z2                                  # Merge latents
+    generated = G(z).detach().cpu()  
+    
+    # Modify dimension i in-place using .data (avoids tracking gradient history)
+    z1.data[0, i, 0, 0] += 0.3 
+    z2.data[0, i, 0, 0] += 0.3 
+    
+    recon = ((generated + 1) / 2)                # Normalize output to [0,1]
+```
+* **Explanation**: Adding to `.data` modifies the tensor values directly in-place without triggering PyTorch's autograd graph. The division by 2 and shift by 0.5 is required because PyTorch Generators output $[-1, 1]$ (due to the final Tanh activation).
