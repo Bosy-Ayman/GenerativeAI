@@ -49,6 +49,8 @@ You FORCE 21 dimensions through 2 neurons. The network HAS to learn what's impor
 
 > **بالعربي:** أجبرت 21 رقم يمروا من 2 خلية بس. الشبكة مضطرة تتعلم إيه اللي مهم. الرقمين دول بقوا "عنوان" الكلمة في فضاء المعنى
 
+![Word2Vec Embeddings 2D Plot](../summary_images/word2vec_embeddings.png)
+
 ### 🔗 THE BRIDGE TO CHAPTER 2:
 > Wait... this "big → small → big" shape... this **bottleneck**... what if we do the same thing with IMAGES instead of words?
 >
@@ -78,6 +80,8 @@ Photo of "7" (784 pixels) → Encoder → [32 numbers] → Decoder → Photo of 
                                     "The Essence of 7"
                                     "جوهر الرقم 7"
 ```
+
+![AutoEncoder Architecture Diagram](../summary_images/autoencoder_architecture.png)
 
 The 32 numbers = the **latent space** = compressed identity of the image
 
@@ -173,6 +177,8 @@ VAE:          Image of "3" → Encoder → μ=[2.0, -0.5], σ=[0.3, 0.2]  (A CLO
 Instead of saying "this image is at point (2.1, -0.5)", say "this image is SOMEWHERE around (2.0, -0.5) with some spread."
 
 > **بالعربي:** بدل ما نقول "الصورة دي في النقطة (2.1, -0.5)"، نقول "الصورة دي في المنطقة حوالين (2.0, -0.5) مع شوية انتشار". كده الصورة بتغطي مساحة مش نقطة — والمساحات بتتداخل → مفيش فراغات!
+
+![VAE Latent Space Comparison Diagram](../summary_images/vae_latent_space.png)
 
 ### 🏠 The City Analogy — COMPLETED:
 > **AutoEncoder** = houses are dots on a map. Big empty deserts between them.
@@ -310,6 +316,8 @@ Real Image from Dataset ──────────────────�
 >
 > مع التنافس، المولّد بيتعلم يعمل صور في منتهى الدقة والوضوح (مش ضبابية زي الـ VAE)!
 
+![GAN Concept Diagram](../summary_images/gan_concept.png)
+
 ### The Mathematical Game (Minimax Loss):
 The objective is to solve the minimax optimization problem using Binary Cross-Entropy loss (`BCELoss`):
 
@@ -359,6 +367,8 @@ Real Image (Class y) ───────────────────�
 > - **المميّز:** بياخد الصورة + التصنيف عشان يتأكد هل الصورة حقيقية ومطابقة للتصنيف ده ولا لا
 >
 > بنستخدم طبقة عصبية اسمها `nn.Embedding` عشان نحول التصنيفات لـ vectors نقدر ندمجها مع المدخلات.
+
+![Conditional GAN (CGAN) Concept Diagram](../summary_images/cgan_concept.png)
 
 ### 💀 THE PROBLEM — GAN Instabilities:
 Adversarial games are notoriously **unstable**. G and D must improve at the same speed. 
@@ -416,6 +426,8 @@ At each step: **x_t = √α_t × x_{t-1} + √(1-α_t) × ε**
 - **√(1-α_t)** = how much noise to ADD (يضيف قد إيه تشويش)
 - **ε** = random noise ~ N(0,1)
 - As α gets smaller → more noise, less image
+
+![Diffusion Process Diagram](../summary_images/diffusion_process.png)
 
 ### The Training (What the Model Learns):
 
