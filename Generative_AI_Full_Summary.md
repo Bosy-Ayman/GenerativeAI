@@ -9,22 +9,23 @@
 ## 🗺️ The Big Picture — How Everything Connects
 
 ```
-┌─────────────┐     ┌───────────────────┐     ┌────────────────┐     ┌──────────────┐
-│  Word2Vec   │────▶│   AutoEncoders    │────▶│      VAE       │────▶│  Diffusion   │
-│ (Lecture 2) │     │ (Lectures 3-5)    │     │ (Lectures 6-9) │     │ (Lecture 13) │
-│             │     │                   │     │                │     │              │
-│ "Represent  │     │ "Compress &       │     │ "Compress &    │     │ "Add noise   │
-│  words as   │     │  reconstruct      │     │  GENERATE new  │     │  then learn  │
-│  vectors"   │     │  data"            │     │  data"         │     │  to remove   │
-│             │     │                   │     │                │     │  it"         │
-└─────────────┘     └───────────────────┘     └────────────────┘     └──────────────┘
+┌─────────────┐     ┌───────────────────┐     ┌────────────────┐     ┌──────────────────┐     ┌──────────────┐
+│  Word2Vec   │────▶│   AutoEncoders    │────▶│      VAE       │────▶│   GAN / CGAN     │────▶│  Diffusion   │
+│ (Lecture 2) │     │ (Lectures 3-5)    │     │ (Lectures 6-9) │     │ (Lectures 10-12) │     │ (Lecture 13) │
+│             │     │                   │     │                │     │                  │     │              │
+│ "Represent  │     │ "Compress &       │     │ "Compress &    │     │ "Two networks    │     │ "Add noise   │
+│  words as   │     │  reconstruct      │     │  GENERATE new  │     │  compete to      │     │  then learn  │
+│  vectors"   │     │  data"            │     │  data"         │     │  generate"       │     │  to remove   │
+│             │     │                   │     │                │     │                  │     │  it"         │
+└─────────────┘     └───────────────────┘     └────────────────┘     └──────────────────┘     └──────────────┘
 ```
 
 **The journey / الرحلة:**
 1. **Word2Vec**: How to represent words as small, meaningful vectors (embeddings) — تمثيل الكلمات كأرقام
 2. **AutoEncoders**: How to compress ANY data (images) into a small vector and reconstruct it — ضغط البيانات وإعادة بناءها
 3. **VAE**: How to make that compressed space *organized* so we can **generate NEW data** — توليد بيانات جديدة
-4. **Diffusion Models**: A completely different approach — destroy data with noise, then learn to reverse the destruction — تدمير البيانات بالتشويش ثم تعلم إعادة بنائها
+4. **GAN / CGAN**: Two networks compete — a Generator creates fakes, a Discriminator catches them — the competition produces sharp, realistic images — شبكتين بيتنافسوا: واحدة بتولد صور مزيفة والتانية بتكشفها
+5. **Diffusion Models**: A completely different approach — destroy data with noise, then learn to reverse the destruction — تدمير البيانات بالتشويش ثم تعلم إعادة بنائها
 
 ---
 
@@ -661,7 +662,458 @@ genImg2 = decoder.predict(ZZ)         # Modified images
 
 ---
 
-# 📖 Part 4: Diffusion Models (Lecture 13)
+# 📖 Part 4: GAN & Conditional GAN (Lectures 10, 11, 12)
+
+## 4.1 What is a GAN? (ما هي الشبكة التوليدية التنافسية؟)
+
+GAN = **Generative Adversarial Network** — Two neural networks **competing** against each other:
+
+- **Generator (G) — المولّد**: Creates fake images from random noise z
+- **Discriminator (D) — المميّز**: Tries to distinguish real images from fake ones
+
+```
+Random Noise z ──▶ [Generator G] ──▶ Fake Image ──┐
+                                                    ├──▶ [Discriminator D] ──▶ Real (1) or Fake (0)?
+Real Image from Dataset ──────────────────────────┘
+```
+
+> **بالعربي:** الـ GAN عبارة عن شبكتين بيتنافسوا:
+> - **المولّد (G):** بياخد تشويش عشوائي (أرقام عشوائية) وبيحاول يحولهم لصورة مقنعة
+> - **المميّز (D):** بياخد صورة (حقيقية أو مزيفة) وبيحاول يقول هل هي حقيقية ولا مزيفة
+>
+> مع التدريب، المولّد بيتحسن في التزييف والمميّز بيتحسن في الكشف — لحد ما المولّد يعمل صور واقعية جداً!
+
+### 🏠 Real-Life Analogy — The Counterfeiter and the Detective:
+> Imagine a **counterfeiter (المزوّر)** trying to make fake money, and a **detective (المحقق)** trying to catch fake bills.
+> - Round 1: The counterfeiter makes terrible fakes → the detective catches them easily
+> - Round 2: The counterfeiter improves → the detective has to look harder
+> - Round 100: The counterfeiter makes PERFECT fakes → even the detective can't tell!
+>
+> **Generator = Counterfeiter, Discriminator = Detective**
+>
+> **بالعربي:** تخيل مزوّر عملات وضابط مباحث. المزوّر بيحاول يعمل فلوس مزيفة والضابط بيحاول يكشفها. مع الوقت، المزوّر بيتحسن والضابط بيتحسن — لحد ما المزوّر يعمل فلوس مش حد يقدر يفرقها!
+
+## 4.2 GAN Training Process (عملية التدريب)
+
+Training alternates between two steps:
+
+### Step 1: Train Discriminator (درّب المميّز)
+1. **Freeze** Generator weights (don't update G)
+2. Show D **real images** → D should output **1** (real)
+3. Generate **fake images** with G → D should output **0** (fake)
+4. Update D weights to get better at distinguishing
+
+### Step 2: Train Generator (درّب المولّد)
+1. **Freeze** Discriminator weights (don't update D)
+2. Generate fake images with G
+3. Pass them to D → G wants D to output **1** (fool it!)
+4. Update G weights to get better at fooling D
+
+### Step 3: Repeat! (كرر!)
+Alternate between training D and G for many epochs.
+
+> **بالعربي:**
+> - **الخطوة 1:** درّب المميّز — وريه صور حقيقية (لازم يقول 1) وصور مزيفة (لازم يقول 0)
+> - **الخطوة 2:** درّب المولّد — خلّيه يولد صور وشوف هل المميّز اتخدع (قال 1) ولا لأ
+> - **الخطوة 3:** كرر — كل مرة الاتنين بيتحسنوا
+
+### 🏠 Another Analogy:
+> It's like a **student (G)** trying to write an essay that looks like a professional wrote it, and a **teacher (D)** trying to tell if a student or professional wrote it. The student keeps improving until the teacher can't tell the difference!
+
+## 4.3 GAN Loss Functions (دوال الخسارة)
+
+**Discriminator Loss:**
+$$\mathcal{L}_D = -[\log D(x_{real}) + \log(1 - D(G(z)))]$$
+
+- D wants to **maximize** D(real) → output 1 for real images
+- D wants to **minimize** D(fake) → output 0 for fake images
+
+**Generator Loss:**
+$$\mathcal{L}_G = -\log D(G(z))$$
+
+- G wants to **maximize** D(G(z)) → fool D into outputting 1 for fake images
+
+Both use **Binary Cross-Entropy (BCE)** loss in practice:
+```python
+criterion = nn.BCELoss()
+```
+
+> **بالعربي:**
+> - **خسارة المميّز:** "قول 1 للحقيقي و 0 للمزيف" — BCE بين الناتج والـ labels
+> - **خسارة المولّد:** "خلّي المميّز يقول 1 للصور المزيفة" — BCE بين ناتج المميّز و 1
+
+## 4.4 GAN Implementation (Lecture 11)
+
+### Setup:
+```python
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torchvision import datasets, transforms
+
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+batch_size = 64
+latent_dim = 100   # Size of random noise vector z
+epochs = 20
+
+# Normalize images to [-1, 1] (because Generator uses Tanh)
+transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Normalize((0.5,), (0.5,))   # [-1, 1]
+])
+train_dataset = datasets.MNIST(root="./data", train=True, transform=transform, download=True)
+dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+```
+
+### Generator Architecture:
+```python
+class Generator(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.model = nn.Sequential(
+            # Input: z (latent_dim × 1 × 1) → Output: 256 × 7 × 7
+            nn.ConvTranspose2d(latent_dim, 256, kernel_size=7, stride=1, padding=0),
+            nn.BatchNorm2d(256),
+            nn.ReLU(True),
+
+            # 256 × 7 × 7 → 128 × 14 × 14
+            nn.ConvTranspose2d(256, 128, 2, 2, 0),
+            nn.BatchNorm2d(128),
+            nn.ReLU(True),
+
+            # 128 × 14 × 14 → 1 × 28 × 28
+            nn.ConvTranspose2d(128, 1, 2, 2, 0),
+            nn.Tanh()   # Output in [-1, 1] range
+        )
+
+    def forward(self, z):
+        return self.model(z)
+```
+
+> **بالعربي:** المولّد بياخد vector تشويش (100 رقم عشوائي) وبيكبره تدريجياً باستخدام ConvTranspose2d لحد ما يوصل لصورة 28×28. الـ Tanh بيخلي القيم بين -1 و 1
+
+### Discriminator Architecture:
+```python
+class Discriminator(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.model = nn.Sequential(
+            # Input: 1 × 28 × 28 → 64 × 14 × 14
+            nn.Conv2d(1, 64, 4, 2, 1),
+            nn.LeakyReLU(0.2, inplace=True),
+
+            # 64 × 14 × 14 → 128 × 7 × 7
+            nn.Conv2d(64, 128, 4, 2, 1),
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(0.2, inplace=True),
+
+            # Flatten → Single probability
+            nn.Flatten(),
+            nn.Linear(128 * 7 * 7, 1),
+            nn.Sigmoid()   # Output probability: 0 = fake, 1 = real
+        )
+
+    def forward(self, x):
+        return self.model(x)
+```
+
+> **بالعربي:** المميّز عكس المولّد — بياخد صورة 28×28 وبيصغرها تدريجياً باستخدام Conv2d لحد ما يطلع رقم واحد (احتمال إن الصورة حقيقية). الـ Sigmoid بيخلي الناتج بين 0 و 1
+
+### Key Architecture Notes:
+| Component | Generator | Discriminator |
+|-----------|-----------|---------------|
+| **Direction** | Small → Big (upscaling) | Big → Small (downscaling) |
+| **Conv type** | ConvTranspose2d | Conv2d |
+| **Activation** | ReLU + Tanh (output) | LeakyReLU + Sigmoid (output) |
+| **BatchNorm** | Yes | Yes (except first layer) |
+| **Output** | Image [-1, 1] | Probability [0, 1] |
+
+> ⚠️ **Why LeakyReLU in Discriminator?** Regular ReLU kills negative values (outputs 0). LeakyReLU lets a small gradient through for negative values (0.2 × input), which helps training stability.
+>
+> **بالعربي:** ليه LeakyReLU في المميّز؟ لأن ReLU العادي بيقتل القيم السالبة (بيحولها لصفر). LeakyReLU بيسمح بجزء صغير من القيم السالبة يعدي، وده بيساعد التدريب يكون مستقر
+
+### Training Loop:
+```python
+G = Generator().to(device)
+D = Discriminator().to(device)
+
+criterion = nn.BCELoss()          # Binary Cross-Entropy
+opt_D = optim.Adam(D.parameters())
+opt_G = optim.Adam(G.parameters())
+
+def train(dataloader, epochs):
+    for epoch in range(epochs):
+        for batch_idx, (real_imgs, _) in enumerate(dataloader):
+            batch_size = real_imgs.size(0)
+            real_imgs = real_imgs.to(device)
+
+            real_labels = torch.ones(batch_size, 1, device=device)   # Label 1 = real
+            fake_labels = torch.zeros(batch_size, 1, device=device)  # Label 0 = fake
+
+            # =============================================
+            # Train Discriminator
+            # =============================================
+            z = torch.randn(batch_size, latent_dim, 1, 1).to(device)  # Random noise
+            fake_imgs = G(z)                          # Generate fakes
+
+            real_output = D(real_imgs)                 # D judges real images
+            fake_output = D(fake_imgs.detach())        # D judges fake images
+            #                          ^^^^^^^^
+            #            .detach() = don't backprop into G!
+
+            real_loss = criterion(real_output, real_labels)  # Should be 1
+            fake_loss = criterion(fake_output, fake_labels)  # Should be 0
+            d_loss = real_loss + fake_loss
+
+            opt_D.zero_grad()
+            d_loss.backward()
+            opt_D.step()
+
+            # =============================================
+            # Train Generator
+            # =============================================
+            z = torch.randn(batch_size, latent_dim, 1, 1).to(device)  # New random noise
+            fake_imgs = G(z)
+            output = D(fake_imgs)                      # D judges new fakes
+            g_loss = criterion(output, real_labels)     # G wants D to say 1 (real)!
+
+            opt_G.zero_grad()
+            g_loss.backward()
+            opt_G.step()
+
+train(dataloader, epochs)
+```
+
+### ⚠️ Critical Details to Understand:
+
+**1. Why `.detach()` on fake_imgs when training D?**
+```python
+fake_output = D(fake_imgs.detach())  # .detach() stops gradient flow to G
+```
+When training D, we DON'T want to update G's weights. `.detach()` breaks the computation graph so gradients don't flow back to G.
+
+> **بالعربي:** لما بندرب المميّز، مش عايزين نعدل أوزان المولّد. `.detach()` بتقطع مسار الـ gradients عشان ما توصلش للمولّد
+
+**2. Why `real_labels` in Generator loss?**
+```python
+g_loss = criterion(output, real_labels)  # G wants D to output 1 for fakes!
+```
+The Generator WANTS the Discriminator to think its fakes are real (output 1). So we use `real_labels` as the target.
+
+> **بالعربي:** المولّد عايز المميّز يقول 1 (حقيقي) للصور المزيفة — عشان كده بنستخدم `real_labels` كهدف
+
+**3. Why new noise `z` for Generator training?**
+We generate NEW noise each time to ensure the Generator learns to handle various inputs, not just memorize specific noise patterns.
+
+### Generation (After Training):
+```python
+G.eval()
+with torch.no_grad():
+    z = torch.randn(1, latent_dim, 1, 1).to(device)
+    generated_img = G(z).cpu()
+    # Convert from [-1,1] to [0,1] for display:
+    generated_img = (generated_img + 1) / 2
+```
+
+### Sheet Exam Question — GAN Latent Walk:
+```python
+# From the sheet: walk in GAN's latent space
+G.eval()
+z1 = torch.randn(1, latent_dim, 1, 1, device=device, requires_grad=True)
+z2 = torch.randn(1, latent_dim, 1, 1, device=device, requires_grad=True)
+
+num_steps = 20
+for step in range(num_steps):
+    z = z1 + z2
+    generated = G(z).detach().cpu()
+    z1.data[0, i, 0, 0] += 0.3   # Modify z1
+    z2.data[0, i, 0, 0] += 0.3   # Modify z2
+    recon = ((generated + 1) / 2)  # Convert gray colors to [0,1]
+```
+
+## 4.5 Conditional GAN — CGAN (Lecture 12)
+
+### The Problem with Regular GAN:
+Regular GAN generates **random** images — you can't control WHAT it generates. If you want specifically a "7", you can't ask for it.
+
+> **بالعربي:** الـ GAN العادي بيولد صور عشوائية — مش بتقدر تتحكم فيها. لو عايز صورة رقم 7 بالتحديد، مش هتعرف. الـ CGAN بيحل المشكلة دي
+
+### CGAN Solution:
+Add a **condition (label)** to BOTH the Generator and Discriminator. The condition tells them WHAT class to generate/evaluate.
+
+```
+Regular GAN:  z (noise) ──────────────────▶ G ──▶ Random image
+CGAN:         z (noise) + label (e.g. "7") ──▶ G ──▶ Image of "7"
+```
+
+### 🏠 Real-Life Analogy:
+> **Regular GAN** = telling an artist "paint something" → you get a random painting
+> **CGAN** = telling an artist "paint a sunset" → you get a sunset!
+>
+> **بالعربي:**
+> - GAN عادي = تقول للرسام "ارسم أي حاجة" → تاخد صورة عشوائية
+> - CGAN = تقول للرسام "ارسم غروب" → تاخد صورة غروب!
+
+### How Labels Are Injected — Embeddings:
+
+Instead of one-hot vectors (which are huge), CGAN uses **nn.Embedding** to convert class labels to small dense vectors:
+
+```
+Label "7" (integer) → nn.Embedding → [0.3, -0.1, 0.8, ...] (embedding_dim numbers)
+```
+
+> **بالعربي:** بدل ما نستخدم one-hot (10 أرقام معظمها أصفار)، بنستخدم Embedding بيحول الرقم لـ vector صغير كثيف. ده نفس فكرة Word2Vec — تحويل label لـ vector ليه معنى!
+
+> 🔗 **Connection to Word2Vec!** Remember Word2Vec converted words to embeddings? CGAN does the SAME thing with class labels! The Embedding layer is the same concept.
+
+### CGAN Generator:
+```python
+class Generator(nn.Module):
+    def __init__(self):
+        super().__init__()
+        # Label → small embedding vector
+        self.label_emb = nn.Embedding(num_classes, embedding_dim)  # 10 classes → 10-dim
+
+        self.model = nn.Sequential(
+            # Input channels = latent_dim + embedding_dim (noise + label)
+            nn.ConvTranspose2d(latent_dim + embedding_dim, 256, 7, 1, 0),
+            nn.BatchNorm2d(256),
+            nn.ReLU(True),
+
+            nn.ConvTranspose2d(256, 128, 4, 2, 1),
+            nn.BatchNorm2d(128),
+            nn.ReLU(True),
+
+            nn.ConvTranspose2d(128, 1, 4, 2, 1),
+            nn.Tanh()
+        )
+
+    def forward(self, z, labels):
+        label_embedding = self.label_emb(labels)              # (batch, embedding_dim)
+        label_embedding = label_embedding.unsqueeze(2).unsqueeze(3)  # → (batch, emb, 1, 1)
+        x = torch.cat([z, label_embedding], dim=1)            # Concatenate noise + label
+        return self.model(x)
+```
+
+> **بالعربي:** المولّد بياخد z (تشويش) + label embedding ← بيلزقهم مع بعض (concatenate) وبيدخلهم الشبكة. كده الشبكة عارفة هي المفروض تولد صورة لإيه
+
+### CGAN Discriminator:
+```python
+class Discriminator(nn.Module):
+    def __init__(self):
+        super().__init__()
+        # Label → embedding same size as image (28×28)
+        self.label_emb = nn.Embedding(num_classes, 28 * 28)  # → reshape to 1×28×28
+
+        self.model = nn.Sequential(
+            # Input channels = 2 (image channel + label channel)
+            nn.Conv2d(2, 64, 4, 2, 1),
+            nn.LeakyReLU(0.2, inplace=True),
+
+            nn.Conv2d(64, 128, 4, 2, 1),
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(0.2, inplace=True),
+
+            nn.Flatten(),
+            nn.Linear(128 * 7 * 7, 1),
+            nn.Sigmoid()
+        )
+
+    def forward(self, img, labels):
+        label_embedding = self.label_emb(labels)                   # (batch, 784)
+        label_embedding = label_embedding.view(labels.size(0), 1, 28, 28)  # → image-shaped
+        x = torch.cat([img, label_embedding], dim=1)               # Stack: 2 channels
+        return self.model(x)
+```
+
+> **بالعربي:** المميّز بياخد الصورة + label embedding (بنفس حجم الصورة 28×28). بيلزقهم كطبقتين (2 channels) وبيدخلهم الشبكة. كده المميّز عارف المفروض يشوف صورة لأي رقم
+
+### ⚠️ Key Difference: How Labels Are Injected
+
+| | Generator | Discriminator |
+|--|-----------|---------------|
+| **Embedding size** | `embedding_dim` (e.g., 10) | `28 × 28` (= 784, same as image) |
+| **Shape** | (batch, emb_dim, 1, 1) | (batch, 1, 28, 28) |
+| **How concatenated** | Along channel dim with z | Along channel dim with image |
+| **Input channels** | `latent_dim + embedding_dim` | `2` (1 image + 1 label map) |
+
+> **بالعربي:**
+> - **في المولّد:** الـ label embedding صغير (10 أرقام) وبيتلزق مع z
+> - **في المميّز:** الـ label embedding كبير (28×28) وبيتحول لصورة وبيتلزق مع الصورة الأصلية كـ channel تاني
+
+### CGAN Training Loop:
+```python
+def train(dataloader, epochs):
+    for epoch in range(epochs):
+        for batch_idx, (real_imgs, labels) in enumerate(dataloader):  # ← labels used!
+            batch_size = real_imgs.size(0)
+            real_imgs = real_imgs.to(device)
+            labels = labels.to(device)          # ← class labels (0-9)
+
+            real_labels = torch.ones(batch_size, 1, device=device)
+            fake_labels = torch.zeros(batch_size, 1, device=device)
+
+            # Train Discriminator
+            z = torch.randn(batch_size, latent_dim, 1, 1).to(device)
+            fake_imgs = G(z, labels)                      # ← pass labels to G
+            real_output = D(real_imgs, labels)             # ← pass labels to D
+            fake_output = D(fake_imgs.detach(), labels)    # ← pass labels to D
+            d_loss = criterion(real_output, real_labels) + criterion(fake_output, fake_labels)
+            opt_D.zero_grad(); d_loss.backward(); opt_D.step()
+
+            # Train Generator
+            z = torch.randn(batch_size, latent_dim, 1, 1).to(device)
+            fake_imgs = G(z, labels)                      # ← pass labels to G
+            output = D(fake_imgs, labels)                  # ← pass labels to D
+            g_loss = criterion(output, real_labels)
+            opt_G.zero_grad(); g_loss.backward(); opt_G.step()
+```
+
+> **بالعربي:** الفرق الوحيد عن GAN العادي إننا بنمرر الـ labels في كل مكان: للمولّد وللمميّز. كده الشبكتين عارفين هما بيتعاملوا مع أنهي class
+
+### CGAN Generation — Controlled! (توليد متحكم فيه):
+```python
+G.eval()
+with torch.no_grad():
+    # Generate specifically a digit "7"!
+    label = torch.tensor([7]).to(device)       # ← Choose what to generate
+    z = torch.randn(1, latent_dim, 1, 1).to(device)
+    generated_img = G(z, label).cpu()           # ← Pass label to G
+```
+
+> **بالعربي:** الآن تقدر تقول للمولّد "اعملي صورة رقم 7" وهيعملها! ده الفرق الكبير عن GAN العادي
+
+## 4.6 GAN vs CGAN — Summary:
+
+| Feature | GAN | CGAN |
+|---------|-----|------|
+| **Control** | Random output — can't choose class | You choose which class to generate |
+| **Labels** | Not used (`_` ignored) | Used everywhere (G and D) |
+| **G input** | z only | z + label embedding |
+| **D input** | image only | image + label embedding |
+| **G first layer** | `ConvTranspose2d(latent_dim, ...)` | `ConvTranspose2d(latent_dim + emb_dim, ...)` |
+| **D first layer** | `Conv2d(1, ...)` | `Conv2d(2, ...)` — 2 channels |
+| **Label technique** | N/A | `nn.Embedding` (like Word2Vec!) |
+
+## 4.7 GAN vs VAE — Why Both Exist:
+
+| | VAE | GAN |
+|--|-----|-----|
+| **Output quality** | Blurry (KL pushes toward average) | Sharp and realistic |
+| **Training** | Stable (single loss) | Unstable (two competing networks) |
+| **Latent space** | Organized, smooth, interpretable | Less organized |
+| **Architecture** | Encoder + Decoder | Generator + Discriminator |
+| **Loss** | Reconstruction + KL | Adversarial (BCE) |
+| **Can encode images?** | Yes (encoder exists) | No (no encoder) |
+| **Framework in course** | TensorFlow/Keras | PyTorch |
+
+> **بالعربي:**
+> - **VAE:** صور ضبابية بس التدريب مستقر والـ latent space منظم
+> - **GAN:** صور حادة وواقعية بس التدريب ممكن يكون غير مستقر (الشبكتين لازم يتوازنوا)
+
+---
+
+# 📖 Part 5: Diffusion Models (Lecture 13)
 
 ## 4.1 The Big Idea
 
@@ -800,20 +1252,21 @@ image.save("image.png")
 ## The Evolution of Generative Models:
 
 ```
-Word2Vec           →  AutoEncoder        →  VAE                →  Diffusion
-(words → vectors)     (images → vectors     (images → organized   (noise → images)
-                       → images)             distributions
-                                             → NEW images)
+Word2Vec       →  AutoEncoder    →  VAE            →  GAN / CGAN       →  Diffusion
+(words→vectors)   (compress &       (organized         (two networks       (noise→images)
+                   reconstruct)      distributions      compete to
+                                     → generate)        generate sharp)
 ```
 
-| Concept | Word2Vec | AutoEncoder | VAE | Diffusion |
-|---------|----------|-------------|-----|-----------|
-| **Goal** | Meaningful word vectors | Compress & reconstruct | Compress & GENERATE | Generate from noise |
-| **Input** | Word pairs | Images | Images | Images + noise level |
-| **Bottleneck** | Embedding layer (2D) | Latent vector z | Distribution (μ, σ²) | No bottleneck |
-| **Loss** | Cross-entropy | Reconstruction only | Reconstruction + KL | MSE (noise prediction) |
-| **Can Generate?** | No (not designed for it) | Poorly (holes in latent space) | Yes! (smooth latent space) | Yes! (high quality) |
-| **Framework** | TensorFlow/Keras | TensorFlow/Keras | TensorFlow/Keras | PyTorch |
+| Concept | Word2Vec | AutoEncoder | VAE | GAN / CGAN | Diffusion |
+|---------|----------|-------------|-----|------------|-----------|
+| **Goal** | Meaningful word vectors | Compress & reconstruct | Compress & GENERATE | GENERATE (sharp) | Generate from noise |
+| **Input** | Word pairs | Images | Images | Noise z (+label for CGAN) | Images + noise level |
+| **Bottleneck** | Embedding layer (2D) | Latent vector z | Distribution (μ, σ²) | No bottleneck | No bottleneck |
+| **Loss** | Cross-entropy | Reconstruction only | Reconstruction + KL | Adversarial BCE | MSE (noise prediction) |
+| **Can Generate?** | No | Poorly (holes) | Yes (blurry) | Yes! (sharp) | Yes! (highest quality) |
+| **Control?** | N/A | N/A | No (random z) | CGAN: Yes (labels) | No (random noise) |
+| **Framework** | TF/Keras | TF/Keras | TF/Keras | PyTorch | PyTorch |
 
 ## Key Connections:
 
@@ -821,21 +1274,29 @@ Word2Vec           →  AutoEncoder        →  VAE                →  Diffusio
 - Word2Vec: 21-dim one-hot → 2-dim embedding (compression of word identity)
 - AutoEncoder: 784-dim image → 32-dim latent (compression of visual features)
 - VAE: 784-dim image → distribution over latent space (probabilistic compression)
+- GAN: No compression at all — generates directly from noise
 
 ### 2. The "Bottleneck" Principle
-All these models use the same core idea: force information through a narrow channel to learn the most important features.
+Word2Vec, AE, and VAE all use bottlenecks. GAN and Diffusion break this pattern — they don't compress, they generate differently.
 
-> **بالعربي:** كل النماذج دي بتستخدم نفس الفكرة الأساسية: اجبر المعلومات تمر من قناة ضيقة عشان تتعلم أهم الخصائص
+> **بالعربي:** Word2Vec و AE و VAE كلهم بيستخدموا bottleneck. الـ GAN والـ Diffusion كسروا النمط ده — مش بيضغطوا، بيولدوا بطريقة مختلفة
 
 ### 3. From Reconstruction → Generation
 - AE: Can reconstruct, but can't generate well (latent space has holes)
 - VAE: Adds KL loss → smooth latent space → CAN generate by sampling from N(0,1)
+- GAN: Adversarial training → Generator learns to produce sharp realistic images
+- CGAN: Same as GAN + control over what class to generate
 - Diffusion: Different approach entirely — learns to reverse noise → generates by denoising random noise
 
 ### 4. The Role of Randomness
 - AE: **No randomness** — deterministic encoding
 - VAE: **Controlled randomness** — reparameterization trick (z = μ + σε)
+- GAN: **Input randomness** — z ~ N(0,1) fed to Generator
 - Diffusion: **Structured randomness** — noise schedule (α values)
+
+### 5. The Embedding Connection
+- Word2Vec: words → embeddings (dense meaningful vectors)
+- CGAN: class labels → embeddings (same technique! nn.Embedding)
 
 ---
 
@@ -858,10 +1319,14 @@ $$\mathcal{L} = \text{Reconstruction Loss} + D_{KL}(q(z|x) \| \mathcal{N}(0,1))$
 ### 5. Reparameterization Trick
 $$z = \mu + \sigma \cdot \epsilon, \quad \epsilon \sim \mathcal{N}(0, 1)$$
 
-### 6. Forward Diffusion
+### 6. GAN Losses
+$$\mathcal{L}_D = -[\log D(x_{real}) + \log(1 - D(G(z)))]$$
+$$\mathcal{L}_G = -\log D(G(z))$$
+
+### 7. Forward Diffusion
 $$x_t = \sqrt{\alpha_t} \cdot x_0 + \sqrt{1-\alpha_t} \cdot \epsilon$$
 
-### 7. Conv2DTranspose Output Size
+### 8. Conv2DTranspose Output Size
 $$\text{OutSize} = (n-1) \times s + k$$
 
 ## Must-Know Code Patterns:
@@ -874,6 +1339,23 @@ z = z_mean + tf.exp(0.5 * z_log_var) * epsilon
 ### KL Loss (VAE)
 ```python
 kl_loss = -0.5 * tf.reduce_sum(1 + z_log_var - tf.square(z_mean) - tf.exp(z_log_var), axis=1)
+```
+
+### GAN Discriminator Training
+```python
+fake_output = D(fake_imgs.detach())        # .detach() = don't update G!
+d_loss = criterion(real_output, real_labels) + criterion(fake_output, fake_labels)
+```
+
+### GAN Generator Training
+```python
+g_loss = criterion(D(fake_imgs), real_labels)  # G wants D to say "real"!
+```
+
+### CGAN — Conditional Generation
+```python
+label = torch.tensor([7]).to(device)           # Choose class
+generated_img = G(z, label)                     # Generate that class
 ```
 
 ### Forward Diffusion
@@ -895,6 +1377,11 @@ generated = decoder.predict(z_random)                # Decode to image
 4. **VAE uses log-variance** (not variance) for numerical stability
 5. **Diffusion models predict NOISE**, not the clean image
 6. **In diffusion, the model takes BOTH the noisy image AND the timestep t**
+7. **GAN: `.detach()` is critical** when training D — it stops gradients from flowing to G
+8. **GAN: Generator loss uses `real_labels`** (not fake_labels) — because G wants D to say "real"
+9. **CGAN: Embedding sizes are DIFFERENT** in G (small, e.g. 10) vs D (big, e.g. 28×28)
+10. **CGAN: D input has 2 channels** (image + label map), not 1
+11. **GAN images are normalized to [-1, 1]** (Tanh output), not [0, 1]. Convert with `(img + 1) / 2`
 
 > **بالعربي — ملخص النقاط الخطيرة:**
 > 1. الـ KL مش متماثل — D(P‖Q) ≠ D(Q‖P)
@@ -903,6 +1390,11 @@ generated = decoder.predict(z_random)                # Decode to image
 > 4. الـ VAE بيستخدم log-variance مش variance عادي
 > 5. الـ Diffusion بيتنبأ بالتشويش مش بالصورة النظيفة
 > 6. موديل الـ Diffusion بياخد الصورة المشوشة + رقم الخطوة الزمنية كمدخلات
+> 7. الـ `.detach()` في GAN ضروري لما بندرب الـ Discriminator — بيمنع الـ gradients توصل للـ Generator
+> 8. خسارة الـ Generator بتستخدم `real_labels` مش `fake_labels` — لأن المولّد عايز المميّز يقول "حقيقي"
+> 9. حجم الـ Embedding مختلف في الـ Generator (صغير) والـ Discriminator (كبير = 28×28)
+> 10. مدخلات الـ Discriminator في CGAN فيها 2 channels (صورة + label map)
+> 11. صور الـ GAN بتكون من -1 لـ 1 (Tanh)، لازم تحولها بـ `(img+1)/2` للعرض
 
 ---
 
