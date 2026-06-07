@@ -123,6 +123,8 @@ After training, you can plot words on a 2D chart. Words with similar meanings wi
 
 > **النتيجة:** king و queen قريبين من بعض، prince و princess قريبين من بعض، man و woman قريبين من بعض
 
+![Word2Vec Embeddings 2D Plot](file:///c:/Users/pouss/Documents/CSAI/4th%20Year/Spring/GenerativeAI/summary_images/word2vec_embeddings.png)
+
 ## 1.4 Key Takeaway
 Word2Vec trains an autoencoder-like network: `word → small vector → predict context word`. The small vector is the **embedding** — a meaningful numeric representation of the word.
 
@@ -140,6 +142,8 @@ An AutoEncoder is a neural network that learns to **compress data** into a small
 Input (784 pixels) → [Encoder] → Latent Space (32 numbers) → [Decoder] → Output (784 pixels)
          x                              z (bottleneck)                         x̂
 ```
+
+![AutoEncoder Architecture Diagram](file:///c:/Users/pouss/Documents/CSAI/4th%20Year/Spring/GenerativeAI/summary_images/autoencoder_architecture.png)
 
 > **بالعربي:** الأوتو إنكودر هو شبكة عصبية بتتعلم تضغط الصورة لأرقام قليلة (الـ bottleneck) وبعدين تعيد بناء الصورة منهم. زي ما تاخد صورة 28×28 بكسل وتوصفها في 32 رقم بس
 
@@ -453,6 +457,8 @@ VAE:          Image → Encoder → (μ, σ²) → Sample z ~ N(μ, σ²) → De
 >
 > الفرق إن الـ VAE مش بيقول "الصورة دي = النقطة 3.5"، بل بيقول "الصورة دي = توزيع حوالين 3.5 بتباين 0.8". ده بيخلي الفضاء الخفي سلس ومتصل
 
+![VAE Latent Space Comparison Diagram](file:///c:/Users/pouss/Documents/CSAI/4th%20Year/Spring/GenerativeAI/summary_images/vae_latent_space.png)
+
 ### 🏠 Real-Life Analogy:
 > Standard AE is like saying "My house is at exactly GPS coordinates (30.0444, 31.2357)". VAE is like saying "My house is SOMEWHERE in the Zamalek neighborhood" (a distribution). This fuzzy encoding forces the network to make the entire Zamalek area represent similar houses → smooth, continuous latent space!
 
@@ -682,6 +688,8 @@ Real Image from Dataset ──────────────────�
 > - **المميّز (D):** بياخد صورة (حقيقية أو مزيفة) وبيحاول يقول هل هي حقيقية ولا مزيفة
 >
 > مع التدريب، المولّد بيتحسن في التزييف والمميّز بيتحسن في الكشف — لحد ما المولّد يعمل صور واقعية جداً!
+
+![GAN Concept Diagram](file:///c:/Users/pouss/Documents/CSAI/4th%20Year/Spring/GenerativeAI/summary_images/gan_concept.png)
 
 ### 🏠 Real-Life Analogy — The Counterfeiter and the Detective:
 > Imagine a **counterfeiter (المزوّر)** trying to make fake money, and a **detective (المحقق)** trying to catch fake bills.
@@ -1028,6 +1036,8 @@ class Discriminator(nn.Module):
 
 > **بالعربي:** المميّز بياخد الصورة + label embedding (بنفس حجم الصورة 28×28). بيلزقهم كطبقتين (2 channels) وبيدخلهم الشبكة. كده المميّز عارف المفروض يشوف صورة لأي رقم
 
+
+![[WhatsApp Image 2026-06-07 at 3.27.10 PM.jpeg|707]]
 ### ⚠️ Key Difference: How Labels Are Injected
 
 | | Generator | Discriminator |
@@ -1123,6 +1133,8 @@ Diffusion models take a **completely different approach** from VAEs:
 2. **Reverse Process (إزالة التشويش)**: Train a neural network to reverse the noise — step by step, remove noise to recover the image
 
 > **بالعربي:** الـ Diffusion Model بيشتغل بطريقة مختلفة تماماً. بياخد صورة ويضيف عليها تشويش تدريجياً لحد ما تبقى تشويش بالكامل. بعدين بيدرب شبكة عصبية تتعلم تشيل التشويش خطوة بخطوة. لما عايز يولد صورة جديدة، بيبدأ من تشويش عشوائي وبيشيل التشويش!
+
+![Diffusion Process Diagram](file:///c:/Users/pouss/Documents/CSAI/4th%20Year/Spring/GenerativeAI/summary_images/diffusion_process.png)
 
 ### 🏠 Real-Life Analogy:
 > Imagine you have a beautiful sand painting. The forward process is like slowly blowing wind on it — each gust scrambles it more until it's just random sand. The reverse process is like watching that video in reverse — learning how to un-scramble sand into a painting. Once you learn this, you can take ANY random pile of sand and turn it into art!
